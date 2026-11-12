@@ -1,0 +1,432 @@
+# VRChat Avatar Platform Reference
+
+The VRChat-side facts a plugin's generated output must satisfy: playable
+layers, built-in animator parameters, state behaviour semantics, allowed
+components, and the parameters that VRChat components themselves write.
+Facts are those of the VRChat documentation at creators.vrchat.com
+(URLs per section). These pages describe the live platform, not an SDK version:
+re-check the page when behaviour seems to have moved, and verify C#
+identifiers against the SDK as always (SKILL.md NEVER #8).
+
+## Table of Contents
+
+- [Playable Layers](#playable-layers)
+- [Built-in Animator Parameters](#built-in-animator-parameters)
+- [State Behaviour Semantics](#state-behaviour-semantics)
+- [Allowed Avatar Components](#allowed-avatar-components)
+- [Stations](#stations)
+- [Spatial Audio](#spatial-audio)
+- [Component-Generated Parameters](#component-generated-parameters)
+- [Synchronization](#synchronization)
+- [Constraints](#constraints)
+- [Head Chop](#head-chop)
+- [See Also](#see-also)
+
+## Playable Layers
+
+Source: https://creators.vrchat.com/avatars/playable-layers
+
+- Humanoid avatars have five playable layers, applied in this order:
+  Base, Additive, Gesture, Action, FX. Generic avatars have three:
+  Base, Action, FX. Later layers take precedence over earlier ones for
+  the same property.
+- Only AnimatorControllers are supported in playable layer slots, and
+  the same controller must never be assigned to more than one slot.
+- Base, Additive, Gesture and Action are for transform animation only:
+  on those layers, non-transform animation (materials, blendshapes,
+  GameObject and component toggles) is not copied to the mirror clone
+  and does not survive. Everything that is not a humanoid transform or
+  muscle animation belongs in FX. This is why generated effect output
+  targets FX (Animator Generation, Merging).
+- Additive is always additive blending. Its first layer's Avatar Mask
+  is ignored.
+- Action is blended to weight 0 by default: blend it up with the
+  Playable Layer Control behaviour before the action, and back to 0
+  afterwards.
+- The first FX layer's mask defaults to disabling all humanoid muscles
+  while enabling GameObject animation; animating transforms in FX is
+  not recommended.
+- When VRChat composites the playable layers into one Animator, each
+  controller's first-layer Avatar Mask is applied to that whole
+  controller. A hands-only mask of the kind the Gesture samples carry
+  therefore voids an FX controller's transform and GameObject
+  animation if it ends up on FX's first layer; generated FX output
+  leaves the first layer's mask alone.
+- Write Defaults: within one controller, all states must share one
+  setting — a mix makes the whole controller's behaviour unstable.
+  VRChat's position is that the setting be uniform across the avatar,
+  and the default playable layers are built with it off; a product
+  that needs it on must expect every playable layer replaced. One
+  exception: a layer whose single state holds a Direct Blend Tree.
+  That technique depends on Write Defaults being on, so such a layer
+  is set on regardless of the avatar-wide setting, and it does not
+  destabilize the surrounding off layers.
+
+## Built-in Animator Parameters
+
+Source: https://creators.vrchat.com/avatars/animator-parameters/
+
+VRChat maintains these parameters on every avatar. They are read-only
+(they cannot be set from the Expressions Menu, by OSC, or by a
+parameter driver), they are used by adding them to a controller, they
+do not need an Expression Parameters entry, and they do not consume the
+custom parameter budget (Expression Parameters and Expressions Menu). Generated conditions
+may read any of them; validate them through ParameterInfo like any
+other name (Parameters).
+
+| Name | Type | Notes |
+| --- | --- | --- |
+| IsLocal | Bool | True on the wearer's own client only |
+| PreviewMode | Int | 1 while the avatar is being previewed |
+| Viseme | Int | Oculus viseme index 0–14 (0 = sil); with jaw systems, 0–100 volume |
+| Voice | Float | Microphone volume 0.0–1.0 |
+| GestureLeft / GestureRight | Int | 0 Neutral, 1 Fist, 2 HandOpen, 3 FingerPoint, 4 Victory, 5 RockNRoll, 6 HandGun, 7 ThumbsUp |
+| GestureLeftWeight / GestureRightWeight | Float | Analog trigger 0.0–1.0 |
+| AngularY | Float | Angular velocity on Y |
+| VelocityX / VelocityY / VelocityZ | Float | Move speed per axis, m/s |
+| VelocityMagnitude | Float | Total move speed |
+| Upright | Float | 0 prone, 1 standing |
+| Grounded | Bool | Touching ground |
+| Seated | Bool | In a station |
+| AFK | Bool | HMD proximity off, or End key |
+| TrackingType | Int | 0 uninitialized, 1 generic rig, 2 transitional, 3 head+hands (or desktop humanoid), 4 +hip, 5 +feet, 6 full body. Values 0–2 in VR are initialization states: do not branch into a dead end on them; the value can change at any time |
+| VRMode | Int | 1 in VR, 0 otherwise |
+| MuteSelf | Bool | The wearer muted themselves |
+| InStation | Bool | In a station (distinct from Seated) |
+| Earmuffs | Bool | Earmuff mode on |
+| IsOnFriendsList | Bool | Viewer is friends with the wearer; false locally |
+| AvatarVersion | Int | 3 for SDK3 avatars |
+| IsAnimatorEnabled | Bool | False one frame before the animator is disabled |
+
+Eye/face tracking group (Bool, computed per client from received
+tracking data, so remote values can differ from the wearer's):
+`UserEyeTracking`, `UserFaceTracking`.
+
+Avatar scaling group: `ScaleModified` (Bool), `ScaleFactor` (Float),
+`ScaleFactorInverse` (Float), `EyeHeightAsMeters` (Float),
+`EyeHeightAsPercent` (Float, 0.2–5.0 m mapped to 0–1).
+
+Custom parameters, for contrast: at most 8192 total per avatar (synced
+and unsynced); cross-platform (PC/Quest) sync matches parameters by
+their position in the Expression Parameters list and their type, not
+by name — use the same asset for both platform uploads.
+
+## State Behaviour Semantics
+
+Source: https://creators.vrchat.com/avatars/state-behaviors
+
+The SDK state behaviours, and their platform semantics. How a
+generator attaches them to states is Animator Generation (Attaching
+SDK state behaviours).
+
+| Behaviour | What it does |
+| --- | --- |
+| VRCAvatarParameterDriver | Sets, adds, copies, remaps, or randomizes avatar parameters on state enter/exit |
+| VRCAnimatorPlayAudio | Configures and plays an AudioSource |
+| VRCAnimatorTrackingControl | Switches individual body/element tracking between tracking and animation |
+| VRCAnimatorLayerControl | Blends a playable layer's weight in or out |
+| VRCAnimatorLocomotionControl | Enables or disables locomotion |
+| VRCAnimatorTemporaryPoseSpace | Moves the avatar into a temporary pose space for the state |
+| VRCPlayableLayerControl | Enables or disables a playable layer with a blend duration |
+
+- All state behaviours run on the first frame of the transition into
+  their state. Execution is not guaranteed for very short states or
+  transitions; a total of at least 0.02 s in and around the state is
+  the documented safe floor.
+- Avatar Parameter Driver: operations run once, on state entry, in list
+  order. Values written to synced parameters are clamped to the synced
+  ranges (Int 0–255, Float −1 to 1); parameters that exist only in the
+  controller are not clamped. Built-in parameters (above) cannot be
+  driven at all, and built-ins do not work as a Copy source. Add and
+  Random can diverge between clients — drive a synced destination and
+  run the driver locally (Local Only).
+- Animator Layer Control cannot change layer 0 (always weight 1.0).
+  Exiting a state mid-blend snaps the layer to the goal weight.
+- Temporary Pose Space executes only if its delay elapses before the
+  state is exited; it is for posture-driven viewpoint changes, not for
+  scaling the avatar.
+- Animator Play Audio: if the AudioSource is not found at the first
+  transition into the state, the behaviour is disabled. A blank Source
+  Path means the avatar root. Playback Order Random and Unique Random
+  choose per player; only the Parameter order, driven by a synced
+  parameter, guarantees every player hears the same clip. Adding the
+  behaviour to a sub-state machine itself (rather than to states) is
+  not recommended.
+
+## Allowed Avatar Components
+
+Source: https://creators.vrchat.com/avatars/whitelisted-avatar-components/whitelisted-avatar-components
+
+- Only listed components work in VRChat. Any other component, and any
+  custom script, does not work and may block the upload. A plugin that
+  emits or requires components must stay inside this list (plus the
+  Modular Avatar and NDMF editor-side components its own build removes
+  or consumes).
+- VRChat components allowed on avatars: VRCAvatarDescriptor,
+  VRCConstraint, VRCContactReceiver, VRCContactSender, VRCHeadChop,
+  VRCIKFollower (deprecated — use VRC Constraints), VRCPhysBone,
+  VRCPhysBoneCollider, VRCPipelineManager, VRCRaycast,
+  VRCSpatialAudioSource (see Spatial Audio), VRCStation (see
+  Stations).
+- Unity components allowed: AimConstraint, Animation, Animator,
+  AudioSource, Camera (see below), Cloth, Collider, FlareLayer,
+  Joints, Light, LineRenderer, LookAtConstraint, MeshFilter,
+  MeshRenderer, ParentConstraint, ParticleSystem,
+  ParticleSystemRenderer, PositionConstraint, Rigidbody,
+  RotationConstraint, ScaleConstraint, SkinnedMeshRenderer,
+  TrailRenderer, Transform.
+- Cameras: on the wearer's own (local) avatar, Camera components are
+  fully whitelisted. On a remote avatar, cameras are disabled at
+  load in every case — disabled, not removed, so an animation can
+  enable them. They are removed outright, and cannot be enabled at
+  all, unless the viewer is the wearer's friend or has used
+  Show Avatar on that avatar; becoming friends afterwards does not
+  reload the avatar, so it does not restore cameras removed at load.
+- VRCRaycast and FinalIK components share a combined limit of 80 per
+  avatar. DynamicBone is deprecated; use PhysBones.
+- Android has additional restrictions beyond this list.
+
+## Stations
+
+Source: https://creators.vrchat.com/worlds/components/vrc_station/
+
+VRCStation is documented with the world components, but it is on the
+avatar allowed list and works on avatars: other players sit on the
+wearer.
+
+- An avatar may carry up to 6 stations; any beyond that are disabled.
+- A station must be enabled at upload. A station disabled at upload
+  never works, whatever later animations do.
+- The fields: Player Mobility (Mobile, Immobilize, or Immobilize For
+  Vehicle — the vehicle variant is the one meant for stations that
+  move, as an avatar station does), Can Use Station From Station, an
+  optional Animation Controller overriding the Sitting playable
+  layer, Disable Station Exit, Seated (which drives the seated
+  avatar's Seated parameter), and the Station Enter and Exit Player
+  Location transforms. For an avatar seat, Disable Station Exit is
+  normally left off: with it on, the seated player cannot leave
+  voluntarily. The 2-metre rule is an upload-time check: the enter
+  and exit locations must be no more than 2 metres apart at upload,
+  and animation may move them further apart afterwards without
+  breaking the station.
+- Interaction uses a collider on the station's own GameObject; with
+  none, VRChat adds a trigger BoxCollider of 1 m × 1 m × 1 m, and a
+  collider on a child object does not count — the interaction area
+  is set by a trigger collider placed on the station object itself
+  (Sphere, Capsule, or Box; a Mesh Collider also works).
+  No mesh is required for the station itself; the interact
+  highlight follows a Mesh Renderer on the collider's object or its
+  children (a Skinned Mesh Renderer does not count).
+- Toggling a station at runtime is animator work (FX layer):
+  disabling the station component ejects the seated player, while
+  disabling the station's GameObject or its collider only stops new
+  players from sitting. The working pattern is to toggle the
+  collider — it starts disabled, and the animation enables it —
+  rather than the station object's active state. Viewers can block
+  the wearer's animations, so a station that is on by default stays
+  usable for those viewers even if the wearer animates it off.
+- While a player is seated, their avatar's origin (their feet) sits
+  at the Station Enter Player Location, and moving that transform
+  moves the player with it; the player's facing follows the station
+  object itself.
+- Seated and the Animation Controller interact: with Seated checked,
+  the seated player's own Sitting layer goes to weight 1 and plays
+  its sitting motion. To override the motion with the station's
+  Animation Controller instead, Seated is left unchecked (the
+  Sitting layer stays at weight 0); the override controller
+  effectively runs between the Action and FX layers and can drive
+  Humanoid animation.
+
+## Spatial Audio
+
+Source: https://creators.vrchat.com/worlds/components/vrc_spatialaudiosource
+
+VRCSpatialAudioSource adds 3D spatialization to an AudioSource
+(adding the component adds the AudioSource). It works on avatars as
+in worlds, with the limits below, enforced at runtime.
+
+- An avatar AudioSource without one gets one created by the SDK
+  with default settings, which may not match the design — a
+  generator that emits or relies on an AudioSource adds the
+  component itself and sets it.
+- Avatar limits: Gain at most 10 dB (the property range is 0–24 dB);
+  Far at most 40 m (also the default). The player's own Player
+  Audio settings can override both.
+- The spatialization properties — Gain, Near, Far, Volumetric
+  Radius, and the falloff choice — are read at initialization:
+  animating them at runtime is not supported. AudioSource
+  properties unrelated to spatialization (pitch, for example) can
+  still be animated.
+- A custom falloff curve is allowed on avatars (Use AudioSource
+  Volume Curve); in a world whose Far is shorter, VRChat squashes
+  the curve by reducing the AudioSource's Max Distance. The avatar
+  audio channel also runs through a compressor that prevents
+  maliciously loud sounds.
+- Toggling avatar audio: enable and disable the AudioSource
+  components rather than their GameObjects.
+
+## Component-Generated Parameters
+
+Parameters written by VRChat components themselves. They exist without
+any Expression Parameters entry, and ParameterInfo aggregates them
+(Parameters) — a validating plugin meets these names and
+must not treat them as missing declarations or as collisions with its
+own parameters.
+
+### PhysBones
+
+Source: https://creators.vrchat.com/common-components/physbones
+
+A VRCPhysBone whose `Parameter` field is set to a prefix writes:
+
+| Parameter | Type | Meaning |
+| --- | --- | --- |
+| {prefix}_IsGrabbed | Bool | The chain is being grabbed |
+| {prefix}_IsPosed | Bool | The chain was posed after grabbing |
+| {prefix}_Angle | Float | 0.0–1.0, end bone's angle from rest (180° = 1.0) |
+| {prefix}_Stretch | Float | 0.0–1.0 of maximum stretch |
+| {prefix}_Squish | Float | 0.0–1.0 of maximum squish |
+
+Two generation-relevant rules: a bone's transforms only respect
+animation when the component's Is Animated option is enabled, and a
+constraint component and a PhysBone must not affect the same
+GameObject (execution-order conflicts) — put the constraint on the
+parent.
+
+### Contact Receivers (on avatars)
+
+Source: https://creators.vrchat.com/common-components/contacts/
+
+- A receiver writes its named parameter on contact. Receiver types:
+  Constant (value while any contact is present, resets when none),
+  OnEnter (one frame on contact), Proximity (Float 0.0–1.0, closest
+  contact wins; Float parameters only).
+- The parameter does not need to be in the synced Expression
+  Parameters list.
+- Advanced options generate derived parameters from the same base
+  name: {parameter}_SenderType (Int: 0 none, 1 same avatar, 2 other
+  avatar, 3 world, 4 item), {parameter}_SenderLocalPositionX/Y/Z,
+  {parameter}_SenderLossyScaleX/Y/Z, {parameter}_SenderVelocityX/Y/Z,
+  {parameter}_SenderVelocityMagnitude, {parameter}_PointSeparation,
+  {parameter}_ProximitySpeed (Proximity type only), and one Bool per
+  collision tag, {parameter}_CollisionTag_{tag}.
+- Collision tags are case-sensitive, at most 16 per contact. Contact
+  shapes are limited to 3 m radius (6 m per side) after scaling.
+- Local-only contacts do not affect the performance rank; an avatar
+  may carry up to 256 contact components when they are local-only.
+
+### VRCRaycast
+
+Source: https://creators.vrchat.com/avatars/avatar-components/raycast
+
+A VRCRaycast whose `Parameter` field is set writes {prefix}_Hit
+(Bool), {prefix}_Ratio (Float 0.0–1.0 of the configured distance), and
+{prefix}_Distance (Float, world units). At most 80 VRCRaycast
+components per avatar, shared with FinalIK (Allowed Components).
+Maximum ray distance is 1000 units.
+
+The name needs its owner: "raycast" also names Unity's Physics.Raycast,
+which is a scripting query and not a component, and no other raycast
+component is on the allowed list. On an avatar, a raycast a plugin can
+generate or reference is always this component.
+
+## Synchronization
+
+- What VRChat sends for an avatar is a closed set: the built-in
+  parameters, the synced Expression Parameters, tracking IK, the
+  player's position and scale, and PhysBone grab/pose state.
+  Everything else about an avatar's behaviour is recomputed
+  independently on each client from that set; a behaviour that looks
+  synchronized is synchronized only through these.
+- A Parameter Driver has no network behaviour of its own: it runs on
+  every client when the same transition fires there (State Behaviour
+  Semantics). Local Only restricts the driver's writes to the
+  wearer's client — the state still transitions everywhere. A random
+  or one-shot result agrees across clients only when the wearer's
+  client writes it to a synced parameter.
+- PhysBone and Contact parameters are written locally, per frame,
+  from each client's own simulation: treat their values as
+  per-client approximations, and do not declare them as synced
+  Expression Parameters. Synced values are sampled at a low rate, so
+  a one-frame value (an OnEnter pulse) is dropped, and a continuously
+  rewritten value chatters. When an event must reach every client,
+  translate it on the wearer's client into a synced parameter (a
+  Parameter Driver writing a synced destination) and let the other
+  clients react to that.
+- Synced Expression Parameters travel as a packed stream in list
+  order, not by name: the sender serializes its synced values in the
+  order of its Expression Parameters, and each receiver unpacks them
+  against the order of the avatar it actually sees — a platform
+  variant or a fallback may be a different avatar. Cross-variant
+  consistency therefore depends on the synced parameters' order and
+  total bit count, not their names. Modular Avatar merges
+  declarations in hierarchy order, so placement order is part of
+  sync compatibility.
+- PhysBone grab and pose state is matched between clients by Network
+  IDs assigned in hierarchy order; avatar variants whose PhysBones
+  appear in a different order misalign that state.
+
+## Constraints
+
+Source: https://creators.vrchat.com/common-components/constraints/
+
+- Prefer VRChat constraints on avatars: any Unity constraint on an
+  avatar is automatically converted to a VRChat constraint when the
+  avatar loads in-game, so Unity constraints make the editor preview
+  and the performance rank inaccurate.
+- The six types mirror Unity's: VRCAimConstraint, VRCLookAtConstraint,
+  VRCParentConstraint, VRCPositionConstraint, VRCRotationConstraint,
+  VRCScaleConstraint.
+- A constraint's Target Transform and its source references cannot be
+  changed by animation; to switch targets, toggle between several
+  constraint components, or animate source weights instead.
+- Freeze To World locks the target in world space on the frozen axes
+  and is designed to be toggled by animation clips; it is not the same
+  as disabling the component.
+- Multiple sources blend by normalized weight: each source's share is
+  its weight divided by the total of all source weights. At an overall
+  weight of 0 the constraint writes its At Rest values, so the object
+  follows its real parent — weight 0 is the rest pose, not an absence
+  of control. The At Rest and Offset values define that reference
+  pose and are normally computed by the editor's Activate from the
+  current pose; anything writing a constraint supplies values
+  consistent with the pose it should hold.
+- VRC constraints add settings Unity's do not have: the Target
+  Transform above, Solve In Local Space (evaluate in local rather
+  than world space), Freeze To World, and Rebake Offsets When
+  Unfrozen. Partial Freeze Rotation Axes settings do not behave as
+  per-axis locks — rotation is quaternion-based — so do not rely on
+  them; the position and scale freeze axes do not have this problem.
+- Constraints have no synchronization of their own: their output is
+  computed locally on each client, so a constraint-driven state
+  (including a world-fixed position) agrees across clients only when
+  it is driven by synchronized state (Synchronization).
+- Performance rank counts every constraint on the avatar, including
+  disabled ones, plus a depth score equal to the longest dependency
+  chain; depth is only calculated accurately when the avatar uses
+  VRChat constraints exclusively.
+
+## Head Chop
+
+Source: https://creators.vrchat.com/avatars/avatar-components/vrc-headchop
+
+- VRCHeadChop controls which bones VRChat scales down to keep the head
+  out of the wearer's first-person view. It affects only the wearer's
+  own view — not mirrors, not other players.
+- Limits: at most 16 VRCHeadChop components per avatar (the SDK errors
+  above that), each listing at most 32 target bones with a per-bone
+  scale factor and an apply condition (always, VR only, non-VR only),
+  multiplied by one global scale factor.
+- The component's enabled state and its global scale factor can be
+  animated, which is how first-person visibility toggles are built.
+
+## See Also
+
+- Animator Generation — the layer/state pattern and the behaviour
+  generation notes this file's semantics apply to.
+- Parameters; Error Reporting; Expression Parameters and Expressions Menu — build-time parameter
+  truth, declaration, and the sync budget.
+- VRChat Mechanism Check (skill) — verify a mechanism against the
+  official documentation before adopting it; this file is the standing
+  extract for the mechanisms above, not a substitute for checking a
+  new one.

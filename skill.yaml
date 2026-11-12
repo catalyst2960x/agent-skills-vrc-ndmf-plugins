@@ -1,0 +1,5 @@
+name: agent-skills-vrc-ndmf-plugins
+title: NDMF Plugin Development
+description: Build VRChat avatar NDMF (Non-Destructive Modular Framework) plugins (editor-only component plus build-time pass) that validate against ParameterInfo, generate and merge animator output, and report through ErrorReport. Covers the two dependency cases, NDMF only and NDMF + Modular Avatar. Dependencies and versions are listed in SKILL.md.
+category: Creation
+include_in_prompt: false
