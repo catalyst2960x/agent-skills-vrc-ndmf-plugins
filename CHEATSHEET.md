@@ -65,6 +65,10 @@ assembly for shared collections/utilities). Every asmdef also gets a
 | Runtime | VRC.SDKBase, VRC.SDK3A |
 | Editor | Runtime, nadena.dev.ndmf, nadena.dev.ndmf.vrchat, nadena.dev.modular-avatar.core (case 2 only), VRC.SDKBase, VRC.SDK3A |
 
+An optional Modular Avatar integration in a case-1 plugin does not
+add the MA reference to the Editor row: its types live in a separate
+Editor assembly gated by defineConstraints (P-16).
+
 asmdef fields that matter:
 
 | Field | Setting |
@@ -103,6 +107,7 @@ Case 1, NDMF only:
 
 ```json
 "vpmDependencies": {
+  "com.vrchat.avatars": "3.5.x",
   "nadena.dev.ndmf": ">=1.8.0 <2.0.0-a"
 }
 ```
@@ -111,13 +116,20 @@ Case 2, NDMF + Modular Avatar:
 
 ```json
 "vpmDependencies": {
+  "com.vrchat.avatars": "3.5.x",
   "nadena.dev.ndmf": ">=1.8.0 <2.0.0-a",
   "nadena.dev.modular-avatar": ">=1.9.10 <2.0.0-a"
 }
 ```
 
-No other dependency appears in either case. Declare exactly the case the
-design chose.
+Of the framework dependencies, no other appears in either case.
+Declare exactly the case the design chose. The com.vrchat.avatars
+entry is the platform, not a case: it is identical in both cases,
+its version takes the SDK's current Breaking version with x for the
+Bump version, and a package that uses the SDK's public APIs declares
+it (VPM Packaging). Set each framework lower bound from the APIs
+the plugin calls, not from the oldest version it was first written
+against (VPM Packaging).
 
 ## Pass checklist
 
@@ -131,7 +143,7 @@ Run each item through its procedure; the steps and traps live there.
 - [ ] P-08 / P-09 — controller parameters registered; layer and states
   built to the pattern
 - [ ] P-11 (case 2) — merge component added before any source removal;
-  only successful components removed
+  every found instance removed, failed ones included (P-19)
 - [ ] Framework (BuildContext) — replaced objects registered with the
   ObjectRegistry when a pass clones or replaces
 
@@ -148,5 +160,4 @@ Run each item through its procedure; the steps and traps live there.
 - Property bindings for generated clips: Manipulation Techniques.
 - Preview — the IRenderFilter contract and the decision order: Modular
   Avatar Integration (Preview); procedure P-15.
-- Audit and delivery: the maintained checklist is P-17 (Procedure
-  Index), including the dependency-closure check and the handover lists.
+- Audit and delivery: P-17 (Procedure Index).

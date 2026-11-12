@@ -79,12 +79,22 @@ package.json) and P-01; it is not restated here. Two framework facts
 belong with it:
 
 - The component itself is `MonoBehaviour, IEditorOnly`: configuration
-  only, no runtime behaviour. NDMF removes EditorOnly objects during the
-  build (in Resolving), so anything the component means must be converted
-  by the pass before that. NDMF's own `INDMFEditorOnly` is the portable
-  form of the marker: it derives from IEditorOnly only when the VRChat
-  SDK is present and is a no-op marker otherwise, for component source
-  that must also compile in projects without the SDK.
+  only, no runtime behaviour. Two different removals apply to two
+  different things, and neither happens before Generating:
+  - NDMF's own removal runs early in Resolving and destroys
+    GameObjects tagged "EditorOnly"; it does not look at components.
+    A component on an untagged object is untouched by it, which is
+    why a Generating pass can collect the component.
+  - Components implementing IEditorOnly are removed by the VRChat
+    SDK, after the NDMF optimize hook: the SDK's
+    RemoveAvatarEditorOnly follows the -1025 callback that runs
+    Optimizing through Last. A plugin whose component must not be
+    visible to an Optimizing-phase processor removes it itself
+    before then (Avatar Optimizer Compatibility, Route 1).
+  NDMF's own `INDMFEditorOnly` is the portable form of the marker: it
+  derives from IEditorOnly only when the VRChat SDK is present and
+  is a no-op marker otherwise, for component source that must also
+  compile in projects without the SDK.
 - package.json lists NDMF directly even when Modular Avatar would bring
   it transitively, because the plugin compiles against NDMF itself.
 

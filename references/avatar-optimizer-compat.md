@@ -41,8 +41,9 @@ AAO uses it internally for most of its own components.
   when the default callback order already places the pass before
   AAO.
 - Without NDMF: remove it in an IVRCSDKPreprocessAvatarCallback
-  whose callbackOrder is below -1025 (NDMF runs its Optimizing
-  phase just before the SDK's RemoveAvatarEditorOnly at -1025).
+  whose callbackOrder is below -1025 (the NDMF optimize hook runs
+  at -1025; the SDK's own RemoveAvatarEditorOnly runs after it,
+  later than AAO's processing).
 - Remove EVERY instance the pass found, including instances that
   failed validation and instances on a path where nothing was
   generated. An early return placed before the removal loop leaks

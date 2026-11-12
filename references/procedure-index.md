@@ -53,8 +53,8 @@ rest of this skill depends on stop existing:
   build the user uploads. Folder-name conventions are not a guarantee a
   distributed package can rest on.
 - **Assembly identity.** Three mechanisms address assemblies by name:
-  InternalsVisibleTo grants (step 3), versionDefines gating of optional
-  integrations (P-16), and test assemblies referencing the product. All
+  InternalsVisibleTo grants (step 3), define-constraint gating of
+  optional integrations (P-16), and test assemblies referencing the product. All
   three are impossible without named assemblies.
 - **An explicit reference graph.** The asmdef references list is the
   assembly-level form of the dependency closure (P-17): in the predefined
@@ -82,8 +82,7 @@ Requires: the product's feature list settled — which outputs it must produce (
    assets with NDMF services alone; animator output means managing the
    controller yourself.
 3. Record the case where the design is written down; passes, asmdef
-   references, and package.json all follow from it. No other product
-   is ever a case.
+   references, and package.json all follow from it.
 
 ## P-03 Register a pass with phase and ordering
 Keys: pass registration, Configure, InPhase, BuildPhase, Generating, BeforePlugin, Run, Sequence, ordering
@@ -215,8 +214,9 @@ Requires: case 2; P-03's ordering before Modular Avatar; P-09's controller; the 
    matchAvatarWriteDefaults per the generated states' assumption.
 2. The generating pass must already be ordered before Modular Avatar
    (P-03), or the merge is silently dropped.
-3. Only after the merge component exists, DestroyImmediate the source
-   components that generated successfully — never the failed ones.
+3. Only after the merge component exists, DestroyImmediate every
+   found source component instance, including ones that failed
+   generation (P-19).
 
 ## P-12 Declare parameters for the avatar
 Keys: declare parameters, ModularAvatarParameters, ParameterConfig, budget, 256, bit, localOnly, saved, sync, name collision
@@ -296,22 +296,31 @@ Requires: the preview story decided before building (SKILL.md, Preview story); f
    mutate the author's objects.
 
 ## P-16 Use Modular Avatar APIs optionally from a case-1 plugin
-Keys: versionDefines, define, #if, optional integration, optional, MODULAR_AVATAR, asmdef
+Keys: versionDefines, defineConstraints, asmdef separation, optional integration, optional
 Case: 1 with optional case-2 features · Depth: CHEATSHEET (Assemblies)
 Requires: P-01's asmdefs in place; the Modular Avatar version range the integration supports decided, matching the pinned versions unless re-verified.
 
-1. In the Editor asmdef's versionDefines, define a symbol for the
-   Modular Avatar version range the integration supports (the pattern
-   NDMF's own asmdef uses for its MA integration).
-2. Reference the MA assembly, and gate every MA-touching code path with
-   #if <symbol>. Ungated references break case-1-only projects.
-3. The gated code still follows case-2 rules (ordering, merge, removal)
-   whenever it runs.
+1. Put every MA-touching type in its own Editor assembly. The main
+   Editor asmdef does not reference Modular Avatar at all: an asmdef
+   reference is not conditional, and a reference to an assembly that
+   is not installed fails compilation of the whole referencing
+   assembly — #if cannot gate a reference.
+2. In the separated asmdef's versionDefines, define a symbol for the
+   Modular Avatar version range the integration supports, and list
+   that symbol in the same asmdef's defineConstraints. Unity
+   compiles an assembly only when every define constraint holds;
+   without Modular Avatar the symbol is undefined and the assembly
+   is skipped entirely.
+3. Inside the separated assembly the MA references need no #if
+   gating. #if remains for version differences within the supported
+   range, not for presence.
+4. The separated code still follows case-2 rules (ordering, merge,
+   removal) whenever it runs.
 
 ## P-17 Audit and hand over
 Keys: audit, dependency closure, brace, JSON, GUID, static audit, handover, unconfirmed
-Case: both · Depth: SKILL.md Core Workflow step 7; CHEATSHEET (Delivery checklist)
-Requires: the package complete through the procedures it uses; the NEVER list and the delivery checklist (CHEATSHEET). Unity-side import is the user's environment to confirm; it is reported as unconfirmed and is never a gate the user must clear before the work proceeds.
+Case: both · Depth: SKILL.md Core Workflow step 7
+Requires: the package complete through the procedures it uses; the NEVER list (SKILL.md). Unity-side import is the user's environment to confirm; it is reported as unconfirmed and is never a gate the user must clear before the work proceeds.
 
 1. Static checks: brace/paren balance, JSON validity for package.json
    and asmdefs, .meta completeness, GUID uniqueness.
@@ -325,9 +334,11 @@ Requires: the package complete through the procedures it uses; the NEVER list an
    the package's own assemblies plus its declared vpmDependencies — not
    merely somewhere in a reference product.
 3. Cross-check the code against the NEVER list and the pass checklist.
-4. Hand over with the three lists (tried but could not / asked but did
-   not / did beyond the ask) and Unity import stated as unconfirmed
-   until the user reports back.
+4. Hand over with the three lists defined in SKILL.md (Core Workflow
+   step 7) and Unity import stated as unconfirmed until the user
+   reports back.
+5. Real-machine verification is a separate batch (P-23); rows not
+   yet run stay unconfirmed in the handover.
 
 ## P-18 Package for VPM distribution
 Keys: VPM, VCC, package.json, vpmDependencies, legacyFolders, user packages, manifest, zipSHA256
@@ -400,3 +411,54 @@ Requires: P-07 (the component's parameters supplied by a provider); parameter na
 4. Skip a component whose GameObject already carries the generated
    components, so the edit-time pre-generation route composes with
    this one.
+
+## P-22 Add animator output to the avatar's own controllers (case 1)
+Keys: AnimatorServicesContext, virtual controller, VirtualAnimatorController, DependsOnContext, AnimLayerType, LayerPriority, ObjectPathRemapper
+Case: 1 · Depth: Animator Generation (Merging into the avatar, case 1)
+Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); the target playable layer decided.
+
+1. Put [DependsOnContext(typeof(AnimatorServicesContext))] on the
+   pass; in Execute, read the context with
+   ctx.Extension<AnimatorServicesContext>().
+2. Take the target VirtualAnimatorController from
+   asc.ControllerContext.Controllers, keyed by
+   VRCAvatarDescriptor.AnimLayerType for a playable layer.
+3. Register parameters with SetParameter. Add layers with
+   AddLayer(LayerPriority, name), choosing the priority against the
+   layers other passes add.
+4. Build states on the layer's StateMachine (AddState); virtualize
+   every real Motion with CloneContext.Clone before assigning it;
+   set the state machine's DefaultState.
+5. Register newly created objects that animations will reference
+   with asc.ObjectPathRemapper.
+6. Assign nothing to the descriptor and clone no controller assets:
+   NDMF commits the virtual controllers when the context
+   deactivates.
+
+## P-23 Verify the build on a real machine (batched)
+Keys: real machine, verification, compile, clean project, AAO residue, preview, unconfirmed
+Case: both · Depth: Debugging; P-17 step 5
+Requires: the package through P-17; a Unity project per row. Run the rows as one batch at the end; a row not yet run is reported as unconfirmed, never as passed.
+
+1. Compile: import the package into a clean Unity 2022 project; it
+   compiles with no errors. Repeat in a project without Modular
+   Avatar (the case-1 environment) and, for case 2, with it; for an
+   optional integration (P-16), both.
+2. Build per case: run a manual build (P-20) and inspect the
+   persisted controllers — generated layers present, parameters
+   registered, and no source components left on the clone.
+3. Parameters with other plugins: build an avatar that also carries
+   another plugin's parameters; check for name collisions and that
+   the shared 256-bit budget holds.
+4. Animator behaviour: the Write Defaults assumptions hold on the
+   merged result; condition-gated transitions fire in both
+   directions; a generated Direct Blend Tree layer evaluates its
+   sub-trees.
+5. Avatar Optimizer: build in a project with AAO installed; no
+   unknown-component warning names the plugin's components, and none
+   of them remains after the build.
+6. VRChat build and Play mode: a VRChat build's output matches the
+   plain build's, and Play mode shows the same behaviour.
+7. Preview: the Scene View preview of the plugin's output matches
+   what the build produces; a mismatch is a preview defect, not a
+   build defect (Modular Avatar Integration, Preview).

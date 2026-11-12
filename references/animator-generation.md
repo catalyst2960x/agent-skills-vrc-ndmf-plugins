@@ -216,16 +216,87 @@ root.children = children;
 
 ## Merging into the avatar
 
+The route depends on the dependency case (SKILL.md, Design
+Decisions).
+
+### Case 2: emit a merge component
+
 - Add one ModularAvatarMergeAnimator to the avatar root with the generated
   controller: animator = the controller, layerType = FX (or the layer the
   product targets), matchAvatarWriteDefaults = true when the generated
   states assume Modular Avatar's write-defaults handling.
 - Modular Avatar consumes merge components in its own passes, which is why
-  the generating pass is ordered before it (Framework reference). If the
-  product does not depend on Modular Avatar, this route does not exist;
-  the dependency decision comes first (SKILL.md, Design Decisions).
-- Remove the source components only after the merge component exists, and
-  only the ones that generated successfully.
+  the generating pass is ordered before it (Framework reference).
+- Remove the source components only after the merge component exists,
+  and remove every found instance, including ones whose generation
+  failed (P-19).
+
+### Case 1: edit the avatar's controllers through virtual controllers
+
+NDMF's AnimatorServicesContext exposes the avatar's own controllers
+as virtual controllers: editable representations that NDMF commits
+back into build-owned copies when the context deactivates. The
+plugin never clones a controller asset and never reassigns the
+descriptor itself. The context is available since NDMF 1.7.0
+(Framework, Version floors).
+
+1. Declare the dependency on the pass,
+   [DependsOnContext(typeof(AnimatorServicesContext))], and read the
+   context in Execute: ctx.Extension<AnimatorServicesContext>().
+2. Take the target controller from
+   asc.ControllerContext.Controllers. On a VRChat avatar the
+   playable layers are keyed by VRCAvatarDescriptor.AnimLayerType
+   (FX, Gesture, and the rest); a scene Animator's controller is
+   keyed by the Animator itself.
+3. Edit the virtual controller. SetParameter registers a parameter.
+   AddLayer(LayerPriority, name) adds a layer; the priority orders
+   it against layers other passes add, without index arithmetic.
+   Build states on the layer's StateMachine (AddState), and
+   virtualize every real Motion with
+   asc.ControllerContext.CloneContext.Clone(motion) before assigning
+   it.
+4. Register every newly created object that animations will
+   reference with asc.ObjectPathRemapper. While the context is
+   active, NDMF tracks avatar object renames and rewrites animation
+   paths accordingly; the remapper is how new objects join that
+   tracking.
+
+```csharp
+using nadena.dev.ndmf;
+using nadena.dev.ndmf.animator;
+using UnityEditor.Animations;
+using UnityEngine;
+using VRC.SDK3.Avatars.Components;
+
+[DependsOnContext(typeof(AnimatorServicesContext))]
+class AddFxLayerPass : Pass<AddFxLayerPass>
+{
+    protected override void Execute(BuildContext ctx)
+    {
+        var asc = ctx.Extension<AnimatorServicesContext>();
+        var fx = asc.ControllerContext.Controllers[
+            VRCAvatarDescriptor.AnimLayerType.FX];
+        fx.SetParameter("MyToggle", new AnimatorControllerParameter
+        {
+            name = "MyToggle",
+            type = AnimatorControllerParameterType.Bool,
+            defaultBool = false,
+        });
+        var layer = fx.AddLayer(LayerPriority.Default, "MyPlugin");
+        layer.DefaultWeight = 1;
+        var state = layer.StateMachine.AddState("Active",
+            asc.ControllerContext.CloneContext.Clone(activeClip));
+        state.WriteDefaultValues = false;
+        layer.StateMachine.DefaultState = state;
+    }
+}
+```
+
+A plugin that instead replaces a whole playable-layer controller
+clones the avatar's controller, edits the clone, and assigns the
+clone to the descriptor's layer; the shared asset is never mutated.
+That route is the fallback for edits the virtual objects do not
+expose.
 
 ## Attaching SDK state behaviours
 

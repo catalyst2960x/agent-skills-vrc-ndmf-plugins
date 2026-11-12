@@ -77,10 +77,13 @@ InPhase(BuildPhase.Generating).BeforePlugin("nadena.dev.modular-avatar").
 ## 7. Cleaning up first
 Habit: DestroyImmediate the source components at the start of the pass
 "to avoid duplicates", then generate.
-Breaks: a component that fails validation is gone together with the
-author's configuration, leaving no trace of what was wrong.
-Rule: destroy only the components that generated successfully, and only
-after the merge component exists. (NEVER #5; P-11 step 3)
+Breaks: a component destroyed before its validation runs is never
+validated and never reported; the build proceeds as if it had not
+been there.
+Rule: process every found instance first (validate, report,
+generate), then DestroyImmediate every found instance, success or
+failure. Removal acts on the build clone; the author's original
+avatar keeps its components either way. (NEVER #5; P-11 step 3, P-19)
 
 ## 8. Debug.Log for validation
 Habit: log the problem and continue, as in a runtime tool.

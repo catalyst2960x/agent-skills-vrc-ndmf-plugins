@@ -1,3 +1,8 @@
+---
+name: agent-skills-vrc-ndmf-plugins
+description: Build VRChat avatar NDMF (Non-Destructive Modular Framework) plugins (editor-only component plus build-time pass) that validate against ParameterInfo, generate and merge animator output, and report through ErrorReport. Covers the two dependency cases, NDMF only and NDMF + Modular Avatar. Dependencies and versions are listed in SKILL.md.
+---
+
 # NDMF Plugin Development
 
 Build VRChat avatar (SDK3A) plugins on NDMF (Non-Destructive Modular
@@ -6,10 +11,14 @@ component the author configures in the Inspector, plus a build-time plugin that
 validates the configuration and generates or transforms avatar content
 (typically an AnimatorController merged into FX).
 
-This skill covers exactly two dependency cases, and nothing else is a
-dependency of the plugins it describes:
+This skill covers exactly two dependency cases. The cases are about
+the framework dependencies, NDMF and Modular Avatar. The VRChat SDK
+is not a case: it is the platform both cases build for — present in
+the target project, referenced by both cases' asmdefs, and declared
+as a package dependency the same way in both cases (VPM Packaging).
 
-1. **NDMF only** — the plugin depends on NDMF alone.
+1. **NDMF only** — of the framework dependencies, the plugin depends
+   on NDMF alone.
 2. **NDMF + Modular Avatar (MA)** — the plugin depends on NDMF and
    Modular Avatar.
 
@@ -17,13 +26,9 @@ Dependency versions: NDMF 1.15.0-beta.5, Modular Avatar
 1.19.0-rc.1. NDMF APIs move between versions, so Step 1 of the workflow
 re-verifies every API against the installed version before use.
 
-No product other than the two dependencies is a source of code or API
-surfaces for a plugin built with this skill, and none becomes a
-dependency through it.
 Load this skill before designing or writing an NDMF plugin, even for one pass.
-Do not use it for world or Udon work (see agent-skills-vrc-udon), for shader
-delivery checks (see Unity Code Delivery), or for adopting a VRChat mechanism
-whose behaviour is unverified (see VRChat Mechanism Check).
+Do not use it for world or Udon work, for shader delivery checks, or
+for adopting a VRChat mechanism whose behaviour is unverified.
 
 ## Table of Contents
 
@@ -55,7 +60,7 @@ whose behaviour is unverified (see VRChat Mechanism Check).
 | 2 | Read the VRCExpressionParameters asset directly to learn parameter names and types | Other plugins rename, add and sync parameters during the build; the asset is not the build-time truth | ParameterInfo.ForContext(ctx).GetParametersForObject(avatarRoot), keyed by EffectiveName |
 | 3 | Edit the avatar's existing FX controller asset in place | Mutates the author's asset and races with Modular Avatar's own cloning and merging | Generate a new AnimatorController in the pass and merge it (Animator Generation) |
 | 4 | Add a ModularAvatarMergeAnimator from a pass that runs after Modular Avatar | MA has already consumed the merge components; the generated controller is silently dropped | Order the pass InPhase(BuildPhase.Generating).BeforePlugin("nadena.dev.modular-avatar") |
-| 5 | Destroy source components before generation succeeds, or destroy ones that failed validation | The author loses the configuration with no trace of what was wrong | DestroyImmediate only the components that generated successfully, after the merge component is added |
+| 5 | Destroy a source component before its validation and generation have run, or leave a found instance of it on the avatar | An early destroy skips that component's error report; a leftover instance reaches Avatar Optimizer as an unknown component | Process every found instance first, then DestroyImmediate every found instance, success or failure; removal acts on the build clone only, and failures are reported through ErrorReport (P-19) |
 | 6 | Use GameObject active state (or any runtime script) as the trigger | An uploaded avatar runs no user scripts; there is no runtime to observe it | Animator parameter conditions (the Driver pattern), or MA reactive components |
 | 7 | Trust serialized arrays and elements to be non-null | Data written by older versions or by script can carry null arrays and null elements into the pass | Sanitize once at the top of the pass (null array = empty, drop null elements) and use the sanitized arrays everywhere |
 | 8 | Take SDK field or enum names from documentation or memory | Doc names are display names; a wrong C# identifier only fails on the user's machine | Verify against code that compiles against the SDK, or the SDK itself; mark anything unverified |
@@ -93,8 +98,10 @@ usually rewrites the pass.
   **NDMF only**: the plugin works through NDMF's own services (phases,
   BuildContext, ErrorReport, ParameterInfo) and transforms the build-time
   avatar clone or generates assets. There is no merge component in this
-  case, so a plugin that adds animator layers manages the target
-  controller itself (clone it; never mutate the shared asset). Case 2,
+  case: a plugin that adds animator output edits the avatar's own
+  controllers through NDMF's virtual controllers
+  (AnimatorServicesContext; Animator Generation, Merging into the
+  avatar), and never mutates the shared controller assets. Case 2,
   **NDMF + Modular Avatar**: adds the generate-and-merge route through
   ModularAvatarMergeAnimator, MA's parameter surface, Reactive Components,
   and MA's preview support. Pick the case before designing the pass; the
@@ -132,8 +139,9 @@ Run the steps in order.
 
 1. **Verify versions and APIs.** Read the plugin and API sources of the
    versions actually installed (or the pinned reference versions above).
-   Confirm each type, method and enum member the design uses; verify VRChat
-   mechanism behaviour per VRChat Mechanism Check. Write down what remains
+   Confirm each type, method and enum member the design uses; verify each
+   VRChat mechanism's behaviour against the official documentation before
+   the design relies on it. Write down what remains
    unverified instead of smoothing it over.
 2. **Lay out the package.** Runtime assembly: the component (MonoBehaviour +
    IEditorOnly) and its serializable types. Editor assembly: plugin,
@@ -147,24 +155,26 @@ Run the steps in order.
    (Framework reference; skeleton in the Cheatsheet).
 4. **Write the pass.** Collect target components under the avatar root
    (including inactive), sanitize their serialized data, validate through
-   ParameterInfo, generate, merge, then remove only the successfully
-   generated source components.
+   ParameterInfo, generate, merge, then remove every found source
+   component instance, success or failure (P-19).
 5. **Generate the animator output** per Animator Generation: one layer per
    component or setting, idle/active states, condition-gated transitions,
    the SDK behaviour on the active state, and the merge component
    (dependency case 2).
 6. **Report every author-facing problem through ErrorReport** per Error
    Reporting, with the component as context. No Debug.Log for validation.
-7. **Audit and hand over** per Unity Code Delivery: static checks first
-   (brace balance, JSON validity, invented-API scan, cross-references,
-   .meta completeness), the three handover lists, and Unity import stated
-   as unconfirmed until the user reports back. The invented-API scan
-   misses one case: a method that exists in another product — or in a
-   reference product that depends on a library your package does not —
-   passes a name check while failing to compile. Verify that every called
-   method resolves inside the package's own dependency closure (its own
-   assemblies plus its declared dependencies), not merely that it exists
-   somewhere in the reference set.
+7. **Audit and hand over.** Static checks first: brace balance, JSON
+   validity, the invented-API scan below, cross-references, and .meta
+   completeness; P-17 runs this step as a procedure. The invented-API
+   scan misses one case: a method that exists in another product — or
+   in a reference product that depends on a library your package does
+   not — passes a name check while failing to compile. Verify that
+   every called method resolves inside the package's own dependency
+   closure (its own assemblies plus its declared dependencies), not
+   merely that it exists somewhere in the reference set. Hand over
+   with three lists: what was tried but could not be done; what was
+   asked but not done; and what was done beyond the ask. State Unity
+   import as unconfirmed until the user reports back.
 
 ## Terminology
 

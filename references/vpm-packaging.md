@@ -68,6 +68,11 @@ Source: https://vcc.docs.vrchat.com/vpm/packages
   the Bump version, e.g. `"com.vrchat.avatars": "3.5.x"` means
   >=3.5.0 <3.6.0. The package must then be retested and re-released
   when the SDK moves to a new Breaking version.
+- Set every framework dependency's lower bound from the APIs the
+  package actually calls: for NDMF, the version floors in Framework;
+  for Modular Avatar, the release that introduced each feature used.
+  A bound below the floor of a used API admits versions in which the
+  package does not compile.
 
 Source: https://vcc.docs.vrchat.com/vpm/packages
 

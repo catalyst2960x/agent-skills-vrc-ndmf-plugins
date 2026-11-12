@@ -28,7 +28,7 @@ merges animator output, and reports problems through `ErrorReport`.
   Modular Avatar integration, parameters, error reporting, Expression
   Parameters and Expressions Menu, manipulation techniques, the VRChat
   avatar platform, VPM packaging, Avatar Optimizer compatibility,
-  debugging, anti-patterns, and the procedure index (P-01 to P-21).
+  debugging, anti-patterns, and the procedure index (P-01 to P-23).
 - `skill.yaml` — the skill manifest.
 
 ## Use

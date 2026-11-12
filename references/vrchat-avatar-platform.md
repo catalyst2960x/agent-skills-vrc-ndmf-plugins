@@ -6,7 +6,10 @@ components, and the parameters that VRChat components themselves write.
 Facts are those of the VRChat documentation at creators.vrchat.com
 (URLs per section). These pages describe the live platform, not an SDK version:
 re-check the page when behaviour seems to have moved, and verify C#
-identifiers against the SDK as always (SKILL.md NEVER #8).
+identifiers against the SDK as always (SKILL.md NEVER #8). This file
+is the standing extract for the mechanisms it covers; for a mechanism
+it does not cover, check the official documentation before adopting
+it.
 
 ## Table of Contents
 
@@ -426,7 +429,3 @@ Source: https://creators.vrchat.com/avatars/avatar-components/vrc-headchop
   generation notes this file's semantics apply to.
 - Parameters; Error Reporting; Expression Parameters and Expressions Menu — build-time parameter
   truth, declaration, and the sync budget.
-- VRChat Mechanism Check (skill) — verify a mechanism against the
-  official documentation before adopting it; this file is the standing
-  extract for the mechanisms above, not a substitute for checking a
-  new one.
