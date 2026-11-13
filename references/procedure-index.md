@@ -209,7 +209,7 @@ Requires: the trigger model decided (SKILL.md, Trigger model) — idle/active, o
    and no return transitions exist. Confirm that is the intent.
 4. Dependency case 1: there is no generated controller to hand over.
    Build the same layer content on the virtual controller instead
-   (P-24): the states, transitions, and clips are unchanged; only the
+   (P-23): the states, transitions, and clips are unchanged; only the
    surface differs, and real Motions are virtualized through the
    CloneContext.
 
@@ -483,32 +483,7 @@ Requires: P-07 (the component's parameters supplied by a provider); parameter na
    components, so the edit-time pre-generation route composes with
    this one.
 
-## P-23 Draw a component's inspector and drawers
-Keys: inspector, CustomEditor, PropertyDrawer, SerializedProperty, ReorderableList, editor UI, suggestions
-Case: both · Depth: references/inspectors-and-drawers.md
-Requires: the component's serialized fields fixed; the validation policy the display must mirror (Error Reporting).
-
-1. Put one CustomEditor per component type in the product's Editor
-   assembly. A field type shared by several components gets one
-   PropertyDrawer, shared by all of them (Inspectors and Drawers,
-   Placement and shape).
-2. Draw and write only through SerializedObject and
-   SerializedProperty — Update, draw, ApplyModifiedProperties —
-   and change arrays only through the serialized array property,
-   drawn as reorderable lists.
-3. Keep one layout across the product's components: the same
-   section order, the same list editing, the same row for the
-   same data.
-4. Offer derivable values as explicit actions that write through
-   the serialized property; never fill or overwrite silently, and
-   keep name fields free text with suggestions beside them.
-5. Mirror the build's validation as help boxes at the same
-   severities; the inspector fixes nothing silently and blocks
-   nothing.
-6. Edit-time generation actions call the same code the build pass
-   runs, with the same presence check.
-
-## P-24 Add animator output to the avatar's own controllers (case 1)
+## P-23 Add animator output to the avatar's own controllers (case 1)
 Keys: AnimatorServicesContext, virtual controller, VirtualAnimatorController, DependsOnContext, AnimLayerType, LayerPriority, ObjectPathRemapper
 Case: 1 · Depth: Animator Generation (Merging into the avatar, case 1)
 Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); the target playable layer decided.
@@ -533,7 +508,7 @@ Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); t
    logic — follows the same procedures as on a generated controller
    (P-09, P-10).
 
-## P-25 Package for VPM distribution
+## P-24 Package for VPM distribution
 Keys: VPM, VCC, package.json, vpmDependencies, legacyFolders, user packages, manifest, zipSHA256
 Case: both · Depth: references/vpm-packaging.md
 Requires: the package complete through P-19; the Assets path of any earlier Assets-based distribution, if one exists.

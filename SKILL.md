@@ -1,5 +1,5 @@
 ---
-name: agent-skills-vrc-ndmf-plugins
+name: ndmf_plugin_development
 description: "VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects."
 ---
 
@@ -50,7 +50,6 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | [VPM Packaging](references/vpm-packaging.md) | VRChat-side requirements for delivering a plugin as a VPM package: manifest fields, dependency ranges, legacy migration from Assets, user-package testing | `references/vpm-packaging.md` |
 | [Avatar Optimizer Compatibility](references/avatar-optimizer-compat.md) | Keeping a plugin's components from triggering AAO's unknown-component warning: remove before AAO, or register with its API | `references/avatar-optimizer-compat.md` |
 | [Debugging](references/debugging.md) | Finding where a build goes wrong: inspecting a manual build's output, the single-step build debugger, ordering diagnosis | `references/debugging.md` |
-| [Inspectors and Drawers](references/inspectors-and-drawers.md) | Drawing a component in the Inspector: CustomEditor and PropertyDrawer placement, SerializedProperty discipline, suggestions, validation display, edit-time actions | `references/inspectors-and-drawers.md` |
 | [Cheatsheet](CHEATSHEET.md) | Skeleton, asmdef and package tables | `CHEATSHEET.md` |
 
 ## Common Mistakes (NEVER List)

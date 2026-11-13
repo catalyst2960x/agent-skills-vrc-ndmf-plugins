@@ -28,7 +28,7 @@ it, the way an editor tool edits a project asset.
 Breaks: it mutates the author's asset and races Modular Avatar's own
 cloning and merging; in a build pass it also breaks the guarantee that
 the build works on a clone and the author's assets survive.
-(NEVER #3, #9; P-09, P-11, P-24)
+(NEVER #3, #9; P-09, P-11, P-23)
 
 ## 4. Calling a helper from a library the package does not depend on
 Habit: a well-known library has exactly the conversion or utility
