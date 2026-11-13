@@ -1,6 +1,6 @@
 ---
 name: agent-skills-vrc-ndmf-plugins
-description: VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects.
+description: "VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects."
 ---
 
 # NDMF Plugin Development
