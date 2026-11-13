@@ -28,7 +28,7 @@ it, the way an editor tool edits a project asset.
 Breaks: it mutates the author's asset and races Modular Avatar's own
 cloning and merging; in a build pass it also breaks the guarantee that
 the build works on a clone and the author's assets survive.
-(NEVER #3, #9; P-09, P-11, P-22)
+(NEVER #3, #9; P-09, P-11, P-24)
 
 ## 4. Calling a helper from a library the package does not depend on
 Habit: a well-known library has exactly the conversion or utility
@@ -39,7 +39,7 @@ machine — and fails in any project that does not install it. The
 failure is not visible in the call itself: its signature genuinely
 matches the reference it was taken from. What differs is the project
 it compiles in.
-(P-08 step 3; P-18 step 2)
+(P-08 step 3; P-19 step 2)
 
 ## 5. Taking SDK names from documentation or memory
 Habit: type the field or enum name as the documentation shows it, or as
@@ -62,7 +62,7 @@ Habit: DestroyImmediate the source components at the start of the pass
 Breaks: a component destroyed before its validation runs is never
 validated and never reported; the build proceeds as if it had not
 been there.
-(NEVER #5; P-11 step 3, P-19)
+(NEVER #5; P-11 step 3, P-20)
 
 ## 8. Debug.Log for validation
 Habit: log the problem and continue, as in a runtime tool.
@@ -118,7 +118,7 @@ Breaks: the build-time avatar differs from the live scene (generation,
 merging and reactive evaluation happen in the build), so Play mode
 shows something the upload will not match, and the author gets no
 editor feedback before building.
-(P-16)
+(P-17)
 
 ## 15. Using a type name that matches the namespace's last segment
 Habit: declare the namespace the asmdef's rootNamespace suggests
@@ -128,7 +128,7 @@ itself, not to UnityEditor.Editor, and the package fails to compile
 at the user's first import (CS0118). The same resolution failure
 occurs at every other type-position use of the name, such as
 `typeof(Editor)`.
-(P-18 step 1)
+(P-19 step 1)
 
 ## 16. Assuming the overload that reads naturally exists
 Habit: call an editor API in the shape that feels obvious, such as
@@ -136,7 +136,7 @@ Habit: call an editor API in the shape that feels obvious, such as
 Breaks: that overload does not exist; the string binds to a
 params GUILayoutOption[] overload instead, and the import fails
 (CS1503) at every call site that used the shape.
-(P-18 step 1)
+(P-19 step 1)
 ## 17. Converting only the live value of something animation also drives
 
 Habit: a converter that rewrites renderer materials and component fields

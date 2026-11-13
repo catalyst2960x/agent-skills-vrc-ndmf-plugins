@@ -328,7 +328,7 @@ Decisions).
   the generating pass is ordered before it (Framework reference).
 - Remove the source components only after the merge component exists,
   and remove every found instance, including ones whose generation
-  failed (P-19).
+  failed (P-20).
 
 ### Case 1: edit the avatar's controllers through virtual controllers
 

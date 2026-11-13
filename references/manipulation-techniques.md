@@ -7,14 +7,20 @@ and must be generated: there is no runtime code. Two generation routes
 exist, and they compose per property, not per product:
 
 - **Reactive route (dependency case 2).** Emit a Modular Avatar (MA)
-  Reactive Component describing the desired end state; MA compiles all reactive
-  components into animation during its Transforming passes, arbitrating
-  when several components touch the same property. A reactive component
-  applies its effect while it is active — activation follows the active
-  state of the GameObject it sits on, as driven by menus and animations —
-  and every reactive component carries an Inverted option that flips
-  that. The base class is not publicly extensible (Modular Avatar
-  Integration), so the built-in components below are the vocabulary.
+  Reactive Component describing the desired end state; MA compiles
+  reactive components into animation during its Transforming passes,
+  arbitrating when several components touch the same property — except
+  its mesh-processing members (ModularAvatarMeshCutter;
+  ModularAvatarShapeChanger with change type Delete), which MA
+  evaluates during the same processing and bakes into the mesh: they
+  do not switch at runtime. A reactive component applies its effect
+  while it is active — activation follows the active state of the
+  GameObject it sits on, as driven by menus and animations; for the
+  mesh-processing members, the state resolved at build and in preview
+  is what is baked in — and every reactive component carries an
+  Inverted option that flips that. The base class is not publicly
+  extensible (Modular Avatar Integration), so the built-in components
+  below are the vocabulary.
 - **Manual route (both cases).** Generate AnimationClips holding the
   property bindings below, and drive them with the layer/state pattern
   or a Direct Blend Tree layer (Animator Generation) — blend trees
@@ -23,9 +29,15 @@ exist, and they compose per property, not per product:
   and layer order decides the winner.
 
 Static manipulation is the third option for changes that do not need a
-parameter: the pass edits the build-time clone directly (activate,
-reparent, delete, replace materials), registering replacements with the
-ObjectRegistry so later passes and other plugins see the new objects.
+parameter. It has two shapes: the plugin's own directive component,
+whose settings its pass applies to the build-time clone (P-16) — the
+pass edits the clone directly (activate, reparent, delete, replace
+materials, edit assets) — and, in dependency case 2, an existing
+Modular Avatar directive component the plugin emits and configures
+(ModularAvatarBoneProxy, ModularAvatarMeshSettings,
+ModularAvatarScaleAdjuster), whose transformation Modular Avatar's
+own passes apply. Either way the result is fixed at build time and
+nothing switches at runtime.
 
 ## Direct editing and the framework surface
 
@@ -63,7 +75,8 @@ common case):
   de-duplicating cache keyed by the original object, so the same
   original always maps to the same clone. Then clone, change the
   clone, and rewrite every reference through that one mapping;
-  register each replacement with the ObjectRegistry (Framework).
+  register each replacement with the ObjectRegistry when another
+  pass may already hold the original (P-15).
   Rewriting only the live values leaves the animated overrides
   pointing at the original, and the avatar snaps back the first time
   such an animation plays.

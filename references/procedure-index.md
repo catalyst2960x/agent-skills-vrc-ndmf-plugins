@@ -54,10 +54,10 @@ rest of this skill depends on stop existing:
   distributed package can rest on.
 - **Assembly identity.** Three mechanisms address assemblies by name:
   InternalsVisibleTo grants (step 3), define-constraint gating of
-  optional integrations (P-17), and test assemblies referencing the product. All
+  optional integrations (P-18), and test assemblies referencing the product. All
   three are impossible without named assemblies.
 - **An explicit reference graph.** The asmdef references list is the
-  assembly-level form of the dependency closure (P-18): in the predefined
+  assembly-level form of the dependency closure (P-19): in the predefined
   assemblies every script sees every other script, so a reference the
   package does not declare compiles at home and fails in a user's project.
 - **Compile scope.** Importers of the package recompile only the changed
@@ -94,10 +94,20 @@ Requires: P-01 (an Editor assembly to hold the plugin class); P-02 (the ordering
 2. Generation for Modular Avatar goes in Generating, ordered
    .BeforePlugin("nadena.dev.modular-avatar"); a pass that removes
    components also declares
-   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-19).
-3. Name each pass with .Run("<name>", handler); the name is what build
-   logs and error reports show.
-4. Keep Configure() free of build work: it only declares.
+   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-20).
+3. A pass that transforms the build clone (mesh, hierarchy, or
+   component fields) goes in Transforming, sequenced by what it
+   consumes and what it feeds: after the passes that produce what
+   it transforms, before the passes that consume the result. A pass
+   that emits another directive component runs before that
+   component's applying pass.
+4. Register each pass in one of the two forms (Framework): an
+   inline handler with .Run("<name>", handler) — the name is what
+   build logs and error reports show — or a Pass<T> subclass by
+   instance, .Run(new MyPass()), which carries its own display
+   name and declares its extension contexts with
+   [DependsOnContext].
+5. Keep Configure() free of build work: it only declares.
 
 ## P-04 Collect target components and sanitize their data
 Keys: collect, GetComponentsInChildren, sanitize, null, array, inactive, AvatarRootObject
@@ -199,7 +209,7 @@ Requires: the trigger model decided (SKILL.md, Trigger model) — idle/active, o
    and no return transitions exist. Confirm that is the intent.
 4. Dependency case 1: there is no generated controller to hand over.
    Build the same layer content on the virtual controller instead
-   (P-22): the states, transitions, and clips are unchanged; only the
+   (P-24): the states, transitions, and clips are unchanged; only the
    surface differs, and real Motions are virtualized through the
    CloneContext.
 
@@ -232,7 +242,7 @@ Requires: case 2; P-03's ordering before Modular Avatar; P-09's controller; the 
    (P-03), or the merge is silently dropped.
 3. Only after the merge component exists, DestroyImmediate every
    found source component instance, including ones that failed
-   generation (P-19).
+   generation (P-20).
 
 ## P-12 Declare parameters for the avatar
 Keys: declare parameters, ModularAvatarParameters, ParameterConfig, budget, 256, bit, localOnly, saved, sync, name collision
@@ -256,7 +266,7 @@ Requires: case 2; parameter names decided once and kept stable; the avatar's exi
 
 ## P-13 Build an Expressions Menu
 Keys: build menu, EXMenu, ModularAvatarMenuInstaller, menuToAppend, installTargetMenu, ModularAvatarMenuItem, SubMenu, Puppet, sub-parameters, 8 controls
-Case: 2 only (case 1 has no menu route) · Depth: Expression Parameters and Expressions Menu (Writing menus)
+Case: 2 only (case 1 menus are out of scope) · Depth: Expression Parameters and Expressions Menu (Writing menus)
 Requires: case 2; the parameters the controls bind already declared (P-12) or supplied (P-07); for the installer route, an asset container the pass owns, to store the generated menus.
 
 1. Choose the route: a generated VRCExpressionsMenu asset + a
@@ -303,34 +313,78 @@ Requires: the target asset's owner resolved on the build-time clone. The edit it
    the build-time clone, resolving through ObjectRegistry when an
    earlier pass may have replaced it.
 2. Clone the asset before editing it; the author's asset is never
-   edited. One de-duplicating mapping, keyed by the original asset,
-   serves every clone the pass makes.
+   edited. An asset the build itself generated is temporary and may
+   be edited in place instead of cloned; the framework's
+   IsTemporaryAsset check distinguishes the two. One de-duplicating
+   mapping, keyed by the original asset, serves every clone the
+   pass makes.
 3. Edit the clone (mesh data, texture pixels, material values).
 4. Rewrite every reference to the original through the mapping —
    renderer and component fields, and animation curves, live and
    animated alike — so no reference to the original remains.
-5. Register each replacement with
-   ObjectRegistry.RegisterReplacedObject(original, clone), and let
-   the build's asset saver persist the clones (Framework).
+5. Let the build's asset saver persist the clones (Framework).
+   Register each replacement with
+   ObjectRegistry.RegisterReplacedObject(original, clone) when
+   another pass may already hold the original: a pass that resolved
+   the asset earlier keeps the original unless the replacement is
+   registered. When every consumer reads the asset from its
+   component after this pass, the rewritten references suffice.
 
-## P-16 Give a visible effect a preview story
-Keys: preview, IRenderFilter, RenderGroup, nadena.dev.ndmf.preview, Reactive, visible effect
+## P-16 Build a component that applies a build-time transformation
+Keys: directive component, build-time transformation, Transforming, scope, nesting, silent, no animator output
+Case: both · Depth: Manipulation Techniques (Direct editing and the framework surface); Framework (Phases and ordering)
+Requires: the output route decided as the directive shape (SKILL.md, Output route): no animator output; the component carries settings only.
+
+1. Author the component as a settings-only, editor-only tag
+   (MonoBehaviour + IEditorOnly, one instance per object): it holds
+   the author's settings and no build logic.
+2. State the component's scope and nesting rule in the design:
+   which objects an instance affects (its own object, its
+   descendants, or what its ancestors carry), and when instances
+   nest, which one wins (nearest ancestor, a cascade, or nesting
+   rejected). A design without a nesting rule is incomplete.
+3. Register the applying pass in Transforming (P-03), sequenced by
+   what it consumes and what it feeds; a pass that emits another
+   directive component runs before that component's applying pass.
+4. In the pass, collect the instances (P-04), resolve what they
+   reference on the build-time clone, and apply the transformation
+   to the clone only. Asset edits follow P-15.
+5. An instance whose target is absent or inapplicable on this
+   avatar is skipped silently: inapplicability is not a defect and
+   draws no report (Error Reporting, Validation policy). Defects in
+   the author's own settings are reported as usual.
+6. Remove every found instance before the Optimizing phase: the
+   applying pass destroys them as it consumes them, or a removal
+   pass the plugin registers does. No other plugin removes them.
+7. Preview follows the preview story (P-17): a transformation that
+   changes what a preview renders gets a filter that re-applies
+   the transformation to the proxies; a parameter-only change
+   normally has none.
+
+## P-17 Give a visible effect a preview story
+Keys: preview, IRenderFilter, PreviewingWith, RenderGroup, nadena.dev.ndmf.preview, Reactive, visible effect
 Case: both · Depth: Modular Avatar Integration (Preview); Framework (Preview system)
 Requires: the preview story decided before building (SKILL.md, Preview story); for the filter route, the proxy-renderer model in Framework (Preview system).
 
-1. Decide before building (SKILL.md, Preview story): inherit MA's
-   preview by expressing the effect as a Reactive Component, write an
-   IRenderFilter, or state explicitly that there is no preview
-   (non-visual output such as audio).
+1. Decide before building (SKILL.md, Preview story). The axis is
+   what the effect changes: a transformation that changes what a
+   preview renders (geometry, transform structure) gets a preview;
+   a change to rendering, physics, or functional parameters alone
+   normally does not. Routes: inherit MA's preview by expressing
+   the effect as a Reactive Component; attach an IRenderFilter to
+   the plugin's own pass with PreviewingWith, re-applying the
+   pass's transformation to the preview proxies; or state
+   explicitly that there is no preview (non-visual output such as
+   audio).
 2. IRenderFilter route: implement the filter contract (Modular Avatar
-   Integration, Preview) — target groups, the node that restyles proxy
-   renderers, the enable gate — including the CanEnableRenderers flag
+   Integration, Preview) — target groups, the node that applies the
+   effect to proxy renderers, the enable gate — including the CanEnableRenderers flag
    when the filter may enable disabled renderers.
 3. Preview runs on the live scene outside builds: touch only the proxy
    renderers and materials given, dispose what the node creates, never
    mutate the author's objects.
 
-## P-17 Use Modular Avatar APIs optionally from a case-1 plugin
+## P-18 Use Modular Avatar APIs optionally from a case-1 plugin
 Keys: versionDefines, defineConstraints, asmdef separation, optional integration, optional
 Case: 1 with optional case-2 features · Depth: CHEATSHEET (Assemblies)
 Requires: P-01's asmdefs in place; the Modular Avatar version range the integration supports decided, matching the pinned versions unless re-verified.
@@ -352,7 +406,7 @@ Requires: P-01's asmdefs in place; the Modular Avatar version range the integrat
 4. The separated code still follows case-2 rules (ordering, merge,
    removal) whenever it runs.
 
-## P-18 Audit and hand over
+## P-19 Audit and hand over
 Keys: audit, dependency closure, brace, JSON, GUID, static audit, handover, unconfirmed
 Case: both · Depth: SKILL.md Core Workflow step 7
 Requires: the package complete through the procedures it uses; the NEVER list (SKILL.md). Unity-side import is the user's environment to confirm; it is reported as unconfirmed and is never a gate the user must clear before the work proceeds.
@@ -375,7 +429,7 @@ Requires: the package complete through the procedures it uses; the NEVER list (S
 5. Real-machine verification is a separate batch; rows not
    yet run stay unconfirmed in the handover.
 
-## P-19 Remove generated components before Avatar Optimizer runs
+## P-20 Remove generated components before Avatar Optimizer runs
 Keys: Avatar Optimizer, AAO, unknown component, com.anatawa12.avatar-optimizer, ComponentInformation, Asset Description, DestroyImmediate
 Case: both · Depth: references/avatar-optimizer-compat.md
 Requires: the component's lifetime decided (build-time only, or present after AAO runs).
@@ -394,10 +448,10 @@ Requires: the component's lifetime decided (build-time only, or present after AA
    Description route is available; never use it for a component
    whose tool processes the avatar.
 
-## P-20 Diagnose a build problem
+## P-21 Diagnose a build problem
 Keys: debugging, ManualProcessAvatar, single-step, Step Back, ordering, VRCFury
 Case: both · Depth: references/debugging.md
-Requires: the failing project in the user's Unity Editor; a static audit (P-18) already done for code-side causes.
+Requires: the failing project in the user's Unity Editor; a static audit (P-19) already done for code-side causes.
 
 1. Wrong final output: run a manual build
    (AvatarProcessor.ManualProcessAvatar) and inspect the persisted
@@ -410,7 +464,7 @@ Requires: the failing project in the user's Unity Editor; a static audit (P-18) 
    plain build: check the split VRCSDK pipeline (Framework, VRChat
    build context) before suspecting the pass itself.
 
-## P-21 Build a component that adds parameters and menu items
+## P-22 Build a component that adds parameters and menu items
 Keys: menu generator component, adds parameters, menu items, ModularAvatarParameters, ModularAvatarMenuItem, provider, emit, presence check
 Case: 2 only · Depth: Expression Parameters and Expressions Menu (Components that add parameters and menu items); Modular Avatar Integration (Emitting Modular Avatar components)
 Requires: P-07 (the component's parameters supplied by a provider); parameter names and menu structure decided (P-12 and P-13 carry the declaration and menu rules).
@@ -429,7 +483,32 @@ Requires: P-07 (the component's parameters supplied by a provider); parameter na
    components, so the edit-time pre-generation route composes with
    this one.
 
-## P-22 Add animator output to the avatar's own controllers (case 1)
+## P-23 Draw a component's inspector and drawers
+Keys: inspector, CustomEditor, PropertyDrawer, SerializedProperty, ReorderableList, editor UI, suggestions
+Case: both · Depth: references/inspectors-and-drawers.md
+Requires: the component's serialized fields fixed; the validation policy the display must mirror (Error Reporting).
+
+1. Put one CustomEditor per component type in the product's Editor
+   assembly. A field type shared by several components gets one
+   PropertyDrawer, shared by all of them (Inspectors and Drawers,
+   Placement and shape).
+2. Draw and write only through SerializedObject and
+   SerializedProperty — Update, draw, ApplyModifiedProperties —
+   and change arrays only through the serialized array property,
+   drawn as reorderable lists.
+3. Keep one layout across the product's components: the same
+   section order, the same list editing, the same row for the
+   same data.
+4. Offer derivable values as explicit actions that write through
+   the serialized property; never fill or overwrite silently, and
+   keep name fields free text with suggestions beside them.
+5. Mirror the build's validation as help boxes at the same
+   severities; the inspector fixes nothing silently and blocks
+   nothing.
+6. Edit-time generation actions call the same code the build pass
+   runs, with the same presence check.
+
+## P-24 Add animator output to the avatar's own controllers (case 1)
 Keys: AnimatorServicesContext, virtual controller, VirtualAnimatorController, DependsOnContext, AnimLayerType, LayerPriority, ObjectPathRemapper
 Case: 1 · Depth: Animator Generation (Merging into the avatar, case 1)
 Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); the target playable layer decided.
@@ -454,10 +533,10 @@ Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); t
    logic — follows the same procedures as on a generated controller
    (P-09, P-10).
 
-## P-23 Package for VPM distribution
+## P-25 Package for VPM distribution
 Keys: VPM, VCC, package.json, vpmDependencies, legacyFolders, user packages, manifest, zipSHA256
 Case: both · Depth: references/vpm-packaging.md
-Requires: the package complete through P-18; the Assets path of any earlier Assets-based distribution, if one exists.
+Requires: the package complete through P-19; the Assets path of any earlier Assets-based distribution, if one exists.
 
 1. Check package.json against the required and recommended fields
    (VPM Packaging, Manifest) and fill what is missing.

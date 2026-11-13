@@ -151,9 +151,11 @@ Two routes, both consumed by MA at build time:
 - Menus are per-avatar and shared: appending is the default posture.
   Replacing or clearing the author's menu from a plugin is destructive
   in the same sense as NEVER #9 and is not a plugin behaviour.
-- **Case 1 has no menu route.** With NDMF alone there is no installer and
-  no menu merge; a product that must present a menu needs dependency
-  case 2. Do not fake it by editing the author's menu asset.
+- **Menus in case 1 are outside this skill's scope.** With NDMF alone
+  there is no installer and no menu merge, so every menu route in
+  this skill runs through dependency case 2. Editing the author's
+  menu asset directly would work mechanically; this skill does not
+  cover it.
 
 ## Components that add parameters and menu items
 
@@ -185,7 +187,7 @@ component:
   the generated components (the presence check of Edit-time
   pre-generation, below), which is what makes the two routes compose.
 - Case 2 only: with no MA there is nothing to emit into, and case 1
-  has no menu route (above).
+  menus are out of scope (above).
 
 ## Edit-time pre-generation
 

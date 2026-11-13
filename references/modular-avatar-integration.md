@@ -55,7 +55,8 @@ BuildContext/ObjectRegistry, not through references captured earlier.
 ## Reactive Components
 
 MA's reactive system turns declarative components into generated animation
-at build time. For the per-target techniques (objects, blendshapes, shader
+at build time; its mesh-processing members are instead evaluated into
+the mesh during the same processing (Manipulation Techniques). For the per-target techniques (objects, blendshapes, shader
 parameters) and the choice between emitting a reactive component and
 generating the animation manually, see Manipulation Techniques. The base type is `ReactiveComponent : AvatarTagComponent`
 (Modular Avatar Runtime/ReactiveComponent.cs); the built-in concrete

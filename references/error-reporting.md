@@ -12,6 +12,12 @@ The parameter set validation reads is specified in Parameters.
   set is not a defect, draws no report, and does not skip the
   component; the name is generated as entered. Name mistakes are
   prevented in the editor, by suggestions, not detected here.
+- Inapplicability is not a defect: a directive component whose
+  target is unset or absent on this avatar, or whose settings do
+  not apply to the avatar's current state, is skipped silently and
+  draws no report. Validation reports defects in what the author
+  configured, not the absence of something the configuration
+  might have applied to.
 - Structural defects are Errors: target object unset, target outside the
   avatar, no usable payload (for example no non-null clips).
 - Sanitize before validating (P-04): validation, generation and name

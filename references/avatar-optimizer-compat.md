@@ -83,5 +83,5 @@ components compatible with AAO").
 ## See Also
 
 - `references/framework.md` — phases and pass ordering.
-- `references/procedure-index.md` — P-19 runs this reference as a
+- `references/procedure-index.md` — P-20 runs this reference as a
   procedure.

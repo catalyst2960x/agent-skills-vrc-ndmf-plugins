@@ -32,8 +32,14 @@ Built-in phases run in this order:
 
 - Declare a pass as `InPhase(BuildPhase.Generating)` and constrain it with
   `.BeforePlugin("nadena.dev.modular-avatar")` or `.AfterPlugin(...)`, by
-  qualified-name string or by plugin type, then `.Run("Display name", Pass)`
-  where Pass is an `Action<BuildContext>`-shaped method.
+  qualified-name string or by plugin type, then register the work in one
+  of two forms: `.Run("Display name", Pass)` where Pass is an
+  `Action<BuildContext>`-shaped method, or `.Run(new MyPass())` where
+  MyPass is a `Pass<MyPass>` subclass whose work is its
+  `protected override void Execute(BuildContext)`. A class pass carries
+  its own display name and declares the extension contexts it needs
+  with `[DependsOnContext(typeof(...))]` on the class; NDMF activates
+  those contexts before Execute runs.
 - Ordering constraints are the contract between plugins. If a pass produces
   something another plugin consumes (a component, a merge animator, a
   parameter), the producer must be ordered before the consumer; an unordered
@@ -53,9 +59,11 @@ The pass receives a `BuildContext` with, among others:
 | ObjectRegistry | Tracks object identity across cloning and replacement |
 | GetState<T>() | Per-build state shared between a plugin's own passes |
 
-- When a pass replaces an object with a clone or a generated object, call
-  `ObjectRegistry.RegisterReplacedObject(old, new)` so later passes and
-  error reporting can still resolve the author's original object. Use
+- When a pass replaces an object with a clone or a generated object,
+  `ObjectRegistry.RegisterReplacedObject(old, new)` records the
+  replacement so a later pass or error reporting that still holds
+  the original can resolve it; register when such a holder may
+  exist (P-15). Use
   `ObjectRegistry.GetReference(obj)` when a stable reference is needed for
   errors or for state.
 - Extension methods in `nadena.dev.ndmf` (and the VRChat extensions in
@@ -105,7 +113,7 @@ Separate from the build pipeline, NDMF runs a preview system in the
 editor (namespace nadena.dev.ndmf.preview). The filter contract, Modular
 Avatar's per-component preview filters, and the decision order for a
 product's preview story are specified in Modular Avatar Integration
-(Preview); the procedure is P-16. This is how Modular Avatar previews
+(Preview); the procedure is P-17. This is how Modular Avatar previews
 its Reactive Components.
 
 ## VRChat build context
