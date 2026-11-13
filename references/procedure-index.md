@@ -54,10 +54,10 @@ rest of this skill depends on stop existing:
   distributed package can rest on.
 - **Assembly identity.** Three mechanisms address assemblies by name:
   InternalsVisibleTo grants (step 3), define-constraint gating of
-  optional integrations (P-16), and test assemblies referencing the product. All
+  optional integrations (P-17), and test assemblies referencing the product. All
   three are impossible without named assemblies.
 - **An explicit reference graph.** The asmdef references list is the
-  assembly-level form of the dependency closure (P-17): in the predefined
+  assembly-level form of the dependency closure (P-18): in the predefined
   assemblies every script sees every other script, so a reference the
   package does not declare compiles at home and fails in a user's project.
 - **Compile scope.** Importers of the package recompile only the changed
@@ -94,7 +94,7 @@ Requires: P-01 (an Editor assembly to hold the plugin class); P-02 (the ordering
 2. Generation for Modular Avatar goes in Generating, ordered
    .BeforePlugin("nadena.dev.modular-avatar"); a pass that removes
    components also declares
-   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-18).
+   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-19).
 3. Name each pass with .Run("<name>", handler); the name is what build
    logs and error reports show.
 4. Keep Configure() free of build work: it only declares.
@@ -199,7 +199,7 @@ Requires: the trigger model decided (SKILL.md, Trigger model) — idle/active, o
    and no return transitions exist. Confirm that is the intent.
 4. Dependency case 1: there is no generated controller to hand over.
    Build the same layer content on the virtual controller instead
-   (P-21): the states, transitions, and clips are unchanged; only the
+   (P-22): the states, transitions, and clips are unchanged; only the
    surface differs, and real Motions are virtualized through the
    CloneContext.
 
@@ -232,7 +232,7 @@ Requires: case 2; P-03's ordering before Modular Avatar; P-09's controller; the 
    (P-03), or the merge is silently dropped.
 3. Only after the merge component exists, DestroyImmediate every
    found source component instance, including ones that failed
-   generation (P-18).
+   generation (P-19).
 
 ## P-12 Declare parameters for the avatar
 Keys: declare parameters, ModularAvatarParameters, ParameterConfig, budget, 256, bit, localOnly, saved, sync, name collision
@@ -294,7 +294,26 @@ Requires: the driving parameter declared or supplied (P-12 / P-07); target objec
    float parameter.
 4. Never drive one property through both routes.
 
-## P-15 Give a visible effect a preview story
+## P-15 Replace or edit an avatar asset in a pass
+Keys: asset editing, mesh, texture, material, clone asset, ObjectRegistry, RegisterReplacedObject, asset saver, rewrite references
+Case: both · Depth: Manipulation Techniques (Direct editing and the framework surface; Converting shared assets in a pass)
+Requires: the target asset's owner resolved on the build-time clone. The edit itself is standard Unity API work and is not specified here; this procedure is the route the asset takes through the build.
+
+1. Receive the asset from the build: read it from its component on
+   the build-time clone, resolving through ObjectRegistry when an
+   earlier pass may have replaced it.
+2. Clone the asset before editing it; the author's asset is never
+   edited. One de-duplicating mapping, keyed by the original asset,
+   serves every clone the pass makes.
+3. Edit the clone (mesh data, texture pixels, material values).
+4. Rewrite every reference to the original through the mapping —
+   renderer and component fields, and animation curves, live and
+   animated alike — so no reference to the original remains.
+5. Register each replacement with
+   ObjectRegistry.RegisterReplacedObject(original, clone), and let
+   the build's asset saver persist the clones (Framework).
+
+## P-16 Give a visible effect a preview story
 Keys: preview, IRenderFilter, RenderGroup, nadena.dev.ndmf.preview, Reactive, visible effect
 Case: both · Depth: Modular Avatar Integration (Preview); Framework (Preview system)
 Requires: the preview story decided before building (SKILL.md, Preview story); for the filter route, the proxy-renderer model in Framework (Preview system).
@@ -311,7 +330,7 @@ Requires: the preview story decided before building (SKILL.md, Preview story); f
    renderers and materials given, dispose what the node creates, never
    mutate the author's objects.
 
-## P-16 Use Modular Avatar APIs optionally from a case-1 plugin
+## P-17 Use Modular Avatar APIs optionally from a case-1 plugin
 Keys: versionDefines, defineConstraints, asmdef separation, optional integration, optional
 Case: 1 with optional case-2 features · Depth: CHEATSHEET (Assemblies)
 Requires: P-01's asmdefs in place; the Modular Avatar version range the integration supports decided, matching the pinned versions unless re-verified.
@@ -333,7 +352,7 @@ Requires: P-01's asmdefs in place; the Modular Avatar version range the integrat
 4. The separated code still follows case-2 rules (ordering, merge,
    removal) whenever it runs.
 
-## P-17 Audit and hand over
+## P-18 Audit and hand over
 Keys: audit, dependency closure, brace, JSON, GUID, static audit, handover, unconfirmed
 Case: both · Depth: SKILL.md Core Workflow step 7
 Requires: the package complete through the procedures it uses; the NEVER list (SKILL.md). Unity-side import is the user's environment to confirm; it is reported as unconfirmed and is never a gate the user must clear before the work proceeds.
@@ -353,10 +372,10 @@ Requires: the package complete through the procedures it uses; the NEVER list (S
 4. Hand over with the three lists defined in SKILL.md (Core Workflow
    step 7) and Unity import stated as unconfirmed until the user
    reports back.
-5. Real-machine verification is a separate batch (P-22); rows not
+5. Real-machine verification is a separate batch; rows not
    yet run stay unconfirmed in the handover.
 
-## P-18 Remove generated components before Avatar Optimizer runs
+## P-19 Remove generated components before Avatar Optimizer runs
 Keys: Avatar Optimizer, AAO, unknown component, com.anatawa12.avatar-optimizer, ComponentInformation, Asset Description, DestroyImmediate
 Case: both · Depth: references/avatar-optimizer-compat.md
 Requires: the component's lifetime decided (build-time only, or present after AAO runs).
@@ -375,10 +394,10 @@ Requires: the component's lifetime decided (build-time only, or present after AA
    Description route is available; never use it for a component
    whose tool processes the avatar.
 
-## P-19 Diagnose a build problem
+## P-20 Diagnose a build problem
 Keys: debugging, ManualProcessAvatar, single-step, Step Back, ordering, VRCFury
 Case: both · Depth: references/debugging.md
-Requires: the failing project in the user's Unity Editor; a static audit (P-17) already done for code-side causes.
+Requires: the failing project in the user's Unity Editor; a static audit (P-18) already done for code-side causes.
 
 1. Wrong final output: run a manual build
    (AvatarProcessor.ManualProcessAvatar) and inspect the persisted
@@ -391,7 +410,7 @@ Requires: the failing project in the user's Unity Editor; a static audit (P-17) 
    plain build: check the split VRCSDK pipeline (Framework, VRChat
    build context) before suspecting the pass itself.
 
-## P-20 Build a component that adds parameters and menu items
+## P-21 Build a component that adds parameters and menu items
 Keys: menu generator component, adds parameters, menu items, ModularAvatarParameters, ModularAvatarMenuItem, provider, emit, presence check
 Case: 2 only · Depth: Expression Parameters and Expressions Menu (Components that add parameters and menu items); Modular Avatar Integration (Emitting Modular Avatar components)
 Requires: P-07 (the component's parameters supplied by a provider); parameter names and menu structure decided (P-12 and P-13 carry the declaration and menu rules).
@@ -410,7 +429,7 @@ Requires: P-07 (the component's parameters supplied by a provider); parameter na
    components, so the edit-time pre-generation route composes with
    this one.
 
-## P-21 Add animator output to the avatar's own controllers (case 1)
+## P-22 Add animator output to the avatar's own controllers (case 1)
 Keys: AnimatorServicesContext, virtual controller, VirtualAnimatorController, DependsOnContext, AnimLayerType, LayerPriority, ObjectPathRemapper
 Case: 1 · Depth: Animator Generation (Merging into the avatar, case 1)
 Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); the target playable layer decided.
@@ -435,38 +454,10 @@ Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); t
    logic — follows the same procedures as on a generated controller
    (P-09, P-10).
 
-## P-22 Verify the build on a real machine (batched)
-Keys: real machine, verification, compile, clean project, AAO residue, preview, unconfirmed
-Case: both · Depth: Debugging; P-17 step 5
-Requires: the package through P-17; a Unity project per row. Run the rows as one batch at the end; a row not yet run is reported as unconfirmed, never as passed.
-
-1. Compile: import the package into a clean Unity 2022 project; it
-   compiles with no errors. Repeat in a project without Modular
-   Avatar (the case-1 environment) and, for case 2, with it; for an
-   optional integration (P-16), both.
-2. Build per case: run a manual build (P-19) and inspect the
-   persisted controllers — generated layers present, parameters
-   registered, and no source components left on the clone.
-3. Parameters with other plugins: build an avatar that also carries
-   another plugin's parameters; check for name collisions and that
-   the shared 256-bit budget holds.
-4. Animator behaviour: the Write Defaults assumptions hold on the
-   merged result; condition-gated transitions fire in both
-   directions; a generated Direct Blend Tree layer evaluates its
-   sub-trees.
-5. Avatar Optimizer: build in a project with AAO installed; no
-   unknown-component warning names the plugin's components, and none
-   of them remains after the build.
-6. VRChat build and Play mode: a VRChat build's output matches the
-   plain build's, and Play mode shows the same behaviour.
-7. Preview: the Scene View preview of the plugin's output matches
-   what the build produces; a mismatch is a preview defect, not a
-   build defect (Modular Avatar Integration, Preview).
-
 ## P-23 Package for VPM distribution
 Keys: VPM, VCC, package.json, vpmDependencies, legacyFolders, user packages, manifest, zipSHA256
 Case: both · Depth: references/vpm-packaging.md
-Requires: the package complete through P-17; the Assets path of any earlier Assets-based distribution, if one exists.
+Requires: the package complete through P-18; the Assets path of any earlier Assets-based distribution, if one exists.
 
 1. Check package.json against the required and recommended fields
    (VPM Packaging, Manifest) and fill what is missing.
@@ -481,21 +472,3 @@ Requires: the package complete through P-17; the Assets path of any earlier Asse
 5. zipSHA256 goes in the repository listing, never in the package's
    own package.json.
 
-## P-24 Replace or edit an avatar asset in a pass
-Keys: asset editing, mesh, texture, material, clone asset, ObjectRegistry, RegisterReplacedObject, asset saver, rewrite references
-Case: both · Depth: Manipulation Techniques (Direct editing and the framework surface; Converting shared assets in a pass)
-Requires: the target asset's owner resolved on the build-time clone. The edit itself is standard Unity API work and is not specified here; this procedure is the route the asset takes through the build.
-
-1. Receive the asset from the build: read it from its component on
-   the build-time clone, resolving through ObjectRegistry when an
-   earlier pass may have replaced it.
-2. Clone the asset before editing it; the author's asset is never
-   edited. One de-duplicating mapping, keyed by the original asset,
-   serves every clone the pass makes.
-3. Edit the clone (mesh data, texture pixels, material values).
-4. Rewrite every reference to the original through the mapping —
-   renderer and component fields, and animation curves, live and
-   animated alike — so no reference to the original remains.
-5. Register each replacement with
-   ObjectRegistry.RegisterReplacedObject(original, clone), and let
-   the build's asset saver persist the clones (Framework).

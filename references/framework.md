@@ -105,7 +105,7 @@ Separate from the build pipeline, NDMF runs a preview system in the
 editor (namespace nadena.dev.ndmf.preview). The filter contract, Modular
 Avatar's per-component preview filters, and the decision order for a
 product's preview story are specified in Modular Avatar Integration
-(Preview); the procedure is P-15. This is how Modular Avatar previews
+(Preview); the procedure is P-16. This is how Modular Avatar previews
 its Reactive Components.
 
 ## VRChat build context

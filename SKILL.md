@@ -1,5 +1,5 @@
 ---
-name: ndmf_plugin_development
+name: agent-skills-vrc-ndmf-plugins
 description: "VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects."
 ---
 
@@ -60,7 +60,7 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | 2 | Read the VRCExpressionParameters asset directly to learn parameter names and types | Other plugins rename, add and sync parameters during the build; the asset is not the build-time truth | ParameterInfo.ForContext(ctx).GetParametersForObject(avatarRoot), keyed by EffectiveName |
 | 3 | Edit the avatar's existing FX controller asset in place | Mutates the author's asset and races with Modular Avatar's own cloning and merging | Case 2: generate a new AnimatorController in the pass and merge it. Case 1: edit through virtual controllers (Animator Generation, Merging into the avatar) |
 | 4 | Add a ModularAvatarMergeAnimator from a pass that runs after Modular Avatar | MA has already consumed the merge components; the generated controller is silently dropped | Order the pass InPhase(BuildPhase.Generating).BeforePlugin("nadena.dev.modular-avatar") |
-| 5 | Destroy a source component before its validation and generation have run, or leave a found instance of it on the avatar | An early destroy skips that component's error report; a leftover instance reaches Avatar Optimizer as an unknown component | Process every found instance first, then destroy every found instance, success or failure; removal acts on the build clone only (P-18) |
+| 5 | Destroy a source component before its validation and generation have run, or leave a found instance of it on the avatar | An early destroy skips that component's error report; a leftover instance reaches Avatar Optimizer as an unknown component | Process every found instance first, then destroy every found instance, success or failure; removal acts on the build clone only (P-19) |
 | 6 | Use GameObject active state (or any runtime script) as the trigger | An uploaded avatar runs no user scripts; there is no runtime to observe it | Animator parameter conditions (the Driver pattern), or MA reactive components |
 | 7 | Trust serialized arrays and elements to be non-null | Data written by older versions or by script can carry null arrays and null elements into the pass | Sanitize once at the top of the pass (null array = empty, drop null elements) and use the sanitized arrays everywhere (P-04) |
 | 8 | Take SDK field or enum names from documentation or memory | Doc names are display names; a wrong C# identifier only fails on the user's machine | Verify against code that compiles against the SDK, or the SDK itself; mark anything unverified |
@@ -152,7 +152,7 @@ Run the steps in order.
    (including inactive), sanitize their serialized data, resolve their
    parameter types through ParameterInfo, generate, merge, then remove
    every found source
-   component instance, success or failure (P-18).
+   component instance, success or failure (P-19).
 5. **Generate the animator output** per Animator Generation: the shape
    chosen per feature (the layer/state pattern, or the Direct Blend Tree
    shape), and the merge component (dependency case 2).
@@ -160,7 +160,7 @@ Run the steps in order.
    Reporting, with the component as context. No Debug.Log for validation.
 7. **Audit and hand over.** Static checks first: brace balance, JSON
    validity, the invented-API scan below, cross-references, and .meta
-   completeness; P-17 runs this step as a procedure. The invented-API
+   completeness; P-18 runs this step as a procedure. The invented-API
    scan misses one case: a method that exists in another product — or
    in a reference product that depends on a library your package does
    not — passes a name check while failing to compile. Verify that

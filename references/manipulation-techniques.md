@@ -52,6 +52,9 @@ asset.
 
 ## Converting shared assets in a pass
 
+P-15 in the Procedure Index runs this section, with Direct editing
+and the framework surface above, as a procedure.
+
 The recurring shape of a conversion pass (a material swap is the
 common case):
 

@@ -41,7 +41,7 @@ public class MyPlugin : Plugin<MyPlugin>
 Inside the pass, in order: sanitize the found components; resolve
 their parameter types through ParameterInfo; generate; merge; then remove
 the component instances — every instance found, including ones that
-failed validation (P-18).
+failed validation (P-19).
 
 ## Phases in order
 
@@ -67,7 +67,7 @@ assembly for shared collections/utilities). Every asmdef also gets a
 
 An optional Modular Avatar integration in a case-1 plugin does not
 add the MA reference to the Editor row: its types live in a separate
-Editor assembly gated by defineConstraints (P-16).
+Editor assembly gated by defineConstraints (P-17).
 
 asmdef fields that matter:
 
@@ -141,7 +141,7 @@ Run each item through its procedure; the steps and traps live there.
 - [ ] P-08 / P-09 — controller parameters registered; layer and states
   built to the pattern
 - [ ] P-11 (case 2) — merge component added before any source removal;
-  every found instance removed, failed ones included (P-18)
+  every found instance removed, failed ones included (P-19)
 - [ ] Framework (BuildContext) — replaced objects registered with the
   ObjectRegistry when a pass clones or replaces
 
@@ -157,5 +157,5 @@ Run each item through its procedure; the steps and traps live there.
   menu limits, installer and hierarchy routes: Expression Parameters and Expressions Menu.
 - Property bindings for generated clips: Manipulation Techniques.
 - Preview — the IRenderFilter contract and the decision order: Modular
-  Avatar Integration (Preview); procedure P-15.
-- Audit and delivery: P-17 (Procedure Index).
+  Avatar Integration (Preview); procedure P-16.
+- Audit and delivery: P-18 (Procedure Index).
