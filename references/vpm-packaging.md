@@ -125,5 +125,5 @@ Source: https://vcc.docs.vrchat.com/vpm/templates
   assembly shape.
 - `references/vrchat-avatar-platform.md` — the VRChat-side facts the
   generated avatar output must satisfy.
-- `references/procedure-index.md` — P-24 runs this reference as a
+- `references/procedure-index.md` — P-25 runs this reference as a
   procedure.

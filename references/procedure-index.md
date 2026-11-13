@@ -54,10 +54,10 @@ rest of this skill depends on stop existing:
   distributed package can rest on.
 - **Assembly identity.** Three mechanisms address assemblies by name:
   InternalsVisibleTo grants (step 3), define-constraint gating of
-  optional integrations (P-18), and test assemblies referencing the product. All
+  optional integrations (P-19), and test assemblies referencing the product. All
   three are impossible without named assemblies.
 - **An explicit reference graph.** The asmdef references list is the
-  assembly-level form of the dependency closure (P-19): in the predefined
+  assembly-level form of the dependency closure (P-20): in the predefined
   assemblies every script sees every other script, so a reference the
   package does not declare compiles at home and fails in a user's project.
 - **Compile scope.** Importers of the package recompile only the changed
@@ -67,7 +67,7 @@ rest of this skill depends on stop existing:
 The asmdef name is also a compatibility surface: other assemblies
 reference it and InternalsVisibleTo grants name it, so renaming one after
 release breaks dependents. Choose names once, as deliberately as
-parameter names (P-12). Leaving autoReferenced at its default (true) on
+parameter names (P-13). Leaving autoReferenced at its default (true) on
 the Editor asmdef makes every assembly in the user's project reference
 the plugin's editor code — set it false.
 
@@ -94,7 +94,7 @@ Requires: P-01 (an Editor assembly to hold the plugin class); P-02 (the ordering
 2. Generation for Modular Avatar goes in Generating, ordered
    .BeforePlugin("nadena.dev.modular-avatar"); a pass that removes
    components also declares
-   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-20).
+   .BeforePlugin("com.anatawa12.avatar-optimizer") (P-21).
 3. A pass that transforms the build clone (mesh, hierarchy, or
    component fields) goes in Transforming, sequenced by what it
    consumes and what it feeds: after the passes that produce what
@@ -209,11 +209,34 @@ Requires: the trigger model decided (SKILL.md, Trigger model) — idle/active, o
    and no return transitions exist. Confirm that is the intent.
 4. Dependency case 1: there is no generated controller to hand over.
    Build the same layer content on the virtual controller instead
-   (P-23): the states, transitions, and clips are unchanged; only the
+   (P-24): the states, transitions, and clips are unchanged; only the
    surface differs, and real Motions are virtualized through the
    CloneContext.
 
-## P-10 Attach an SDK state behaviour and map the fields
+## P-10 Track an object's active state as a parameter
+Keys: reactive tracking, proxy parameter, m_IsActive, AnimationIndex, mirroring pass, active state
+Case: both · Depth: references/reactive-tracking.md
+Requires: the provider shape decided (Reactive Tracking, Components); the layer that reads the proxy (P-09).
+
+1. During Generating, register every object the layer must follow
+   with the registry, in the registry form the provider chose
+   (Reactive Tracking, Components; The mirroring pass).
+2. Declare the proxies on the generated controller as animator
+   parameters only, and compose the layer's conditions from them:
+   a single object's Greater on the forward transition and Less on
+   the return; for hierarchy activation, every chain proxy's
+   Greater on the forward transition and one return per chain
+   proxy (P-09; Reactive Tracking, Components). A blend tree
+   consumer reads the same proxies as blend parameters instead
+   (Reactive Tracking, Components).
+3. Register the mirroring pass in Transforming, ordered after
+   every pass that generates or edits the avatar's animation
+   clips, requiring the AnimatorServicesContext (P-03).
+4. In the mirroring pass, mirror each tracked object's
+   m_IsActive curves onto its proxy in the same clips (Reactive
+   Tracking, The mirroring pass).
+
+## P-11 Attach an SDK state behaviour and map the fields
 Keys: attach behaviour, StateMachineBehaviour, VRCAnimatorPlayAudio, field mapping, clamp, relative path, SourcePath
 Case: both · Depth: Animator Generation (Mapping; Attaching SDK state behaviours)
 Requires: the VRChat SDK present in the project (the behaviour type comes from it); the field mapping and limits verified against SDK-compiling code (NEVER #8); P-09's states, since the behaviour lands on the active state.
@@ -228,7 +251,7 @@ Requires: the VRChat SDK present in the project (the behaviour type comes from i
 3. Verify every SDK field and enum identifier against SDK-compiling code
    before writing it; mark what stays unverified (NEVER #8).
 
-## P-11 Merge the generated controller into the avatar
+## P-12 Merge the generated controller into the avatar
 Keys: merge, ModularAvatarMergeAnimator, MergeAnimator, FX, matchAvatarWriteDefaults, removal, DestroyImmediate
 Case: 2 only · Depth: Animator Generation (Merging); NEVER #4, #5
 Requires: case 2; P-03's ordering before Modular Avatar; P-09's controller; the target playable layer decided (SKILL.md, Output route).
@@ -242,9 +265,9 @@ Requires: case 2; P-03's ordering before Modular Avatar; P-09's controller; the 
    (P-03), or the merge is silently dropped.
 3. Only after the merge component exists, DestroyImmediate every
    found source component instance, including ones that failed
-   generation (P-20).
+   generation (P-21).
 
-## P-12 Declare parameters for the avatar
+## P-13 Declare parameters for the avatar
 Keys: declare parameters, ModularAvatarParameters, ParameterConfig, budget, 256, bit, localOnly, saved, sync, name collision
 Case: 2 (case 1 has no declaration service) · Depth: Expression Parameters and Expressions Menu (Writing parameters)
 Requires: case 2; parameter names decided once and kept stable; the avatar's existing parameter usage read (P-05), so the budget is checked against the real avatar, not in isolation.
@@ -264,10 +287,10 @@ Requires: case 2; parameter names decided once and kept stable; the avatar's exi
    ParameterInfo as validation errors.
 4. Names are a compatibility surface: decide them once, keep them stable.
 
-## P-13 Build an Expressions Menu
+## P-14 Build an Expressions Menu
 Keys: build menu, EXMenu, ModularAvatarMenuInstaller, menuToAppend, installTargetMenu, ModularAvatarMenuItem, SubMenu, Puppet, sub-parameters, 8 controls
 Case: 2 only (case 1 menus are out of scope) · Depth: Expression Parameters and Expressions Menu (Writing menus)
-Requires: case 2; the parameters the controls bind already declared (P-12) or supplied (P-07); for the installer route, an asset container the pass owns, to store the generated menus.
+Requires: case 2; the parameters the controls bind already declared (P-13) or supplied (P-07); for the installer route, an asset container the pass owns, to store the generated menus.
 
 1. Choose the route: a generated VRCExpressionsMenu asset + a
    ModularAvatarMenuInstaller, or a ModularAvatarMenuItem hierarchy.
@@ -279,16 +302,16 @@ Requires: case 2; the parameters the controls bind already declared (P-12) or su
    asset, or another object's children). An item whose parameter is
    declared nowhere relies on MA's automatic creation: set isSynced,
    isSaved, isDefault, and automaticValue deliberately, or declare the
-   parameter in P-12 instead.
+   parameter in P-13 instead.
 4. Respect the menu limits and the puppet sub-parameter bindings
    (Expression Parameters and Expressions Menu, Writing menus). Append;
    never replace the author's
    menu.
 
-## P-14 Drive an object, a blendshape, or a shader parameter
+## P-15 Drive an object, a blendshape, or a shader parameter
 Keys: drive, toggle, m_IsActive, m_Enabled, blendShape, weight, 0..100, material., shader parameter, ObjectToggle, ShapeChanger, MaterialSetter, MaterialSwap, BlendshapeSync
 Case: both (reactive route is case 2) · Depth: Manipulation Techniques
-Requires: the driving parameter declared or supplied (P-12 / P-07); target objects and renderers resolvable on the build-time clone — through the ObjectRegistry when earlier passes replaced them.
+Requires: the driving parameter declared or supplied (P-13 / P-07); target objects and renderers resolvable on the build-time clone — through the ObjectRegistry when earlier passes replaced them.
 
 1. Pick the route per property: a Reactive Component when a built-in
    expresses the end state (ObjectToggle, ShapeChanger, MaterialSetter,
@@ -304,7 +327,7 @@ Requires: the driving parameter declared or supplied (P-12 / P-07); target objec
    float parameter.
 4. Never drive one property through both routes.
 
-## P-15 Replace or edit an avatar asset in a pass
+## P-16 Replace or edit an avatar asset in a pass
 Keys: asset editing, mesh, texture, material, clone asset, ObjectRegistry, RegisterReplacedObject, asset saver, rewrite references
 Case: both · Depth: Manipulation Techniques (Direct editing and the framework surface; Converting shared assets in a pass)
 Requires: the target asset's owner resolved on the build-time clone. The edit itself is standard Unity API work and is not specified here; this procedure is the route the asset takes through the build.
@@ -330,7 +353,7 @@ Requires: the target asset's owner resolved on the build-time clone. The edit it
    registered. When every consumer reads the asset from its
    component after this pass, the rewritten references suffice.
 
-## P-16 Build a component that applies a build-time transformation
+## P-17 Build a component that applies a build-time transformation
 Keys: directive component, build-time transformation, Transforming, scope, nesting, silent, no animator output
 Case: both · Depth: Manipulation Techniques (Direct editing and the framework surface); Framework (Phases and ordering)
 Requires: the output route decided as the directive shape (SKILL.md, Output route): no animator output; the component carries settings only.
@@ -348,7 +371,7 @@ Requires: the output route decided as the directive shape (SKILL.md, Output rout
    directive component runs before that component's applying pass.
 4. In the pass, collect the instances (P-04), resolve what they
    reference on the build-time clone, and apply the transformation
-   to the clone only. Asset edits follow P-15.
+   to the clone only. Asset edits follow P-16.
 5. An instance whose target is absent or inapplicable on this
    avatar is skipped silently: inapplicability is not a defect and
    draws no report (Error Reporting, Validation policy). Defects in
@@ -356,12 +379,12 @@ Requires: the output route decided as the directive shape (SKILL.md, Output rout
 6. Remove every found instance before the Optimizing phase: the
    applying pass destroys them as it consumes them, or a removal
    pass the plugin registers does. No other plugin removes them.
-7. Preview follows the preview story (P-17): a transformation that
+7. Preview follows the preview story (P-18): a transformation that
    changes what a preview renders gets a filter that re-applies
    the transformation to the proxies; a parameter-only change
    normally has none.
 
-## P-17 Give a visible effect a preview story
+## P-18 Give a visible effect a preview story
 Keys: preview, IRenderFilter, PreviewingWith, RenderGroup, nadena.dev.ndmf.preview, Reactive, visible effect
 Case: both · Depth: Modular Avatar Integration (Preview); Framework (Preview system)
 Requires: the preview story decided before building (SKILL.md, Preview story); for the filter route, the proxy-renderer model in Framework (Preview system).
@@ -384,7 +407,7 @@ Requires: the preview story decided before building (SKILL.md, Preview story); f
    renderers and materials given, dispose what the node creates, never
    mutate the author's objects.
 
-## P-18 Use Modular Avatar APIs optionally from a case-1 plugin
+## P-19 Use Modular Avatar APIs optionally from a case-1 plugin
 Keys: versionDefines, defineConstraints, asmdef separation, optional integration, optional
 Case: 1 with optional case-2 features · Depth: CHEATSHEET (Assemblies)
 Requires: P-01's asmdefs in place; the Modular Avatar version range the integration supports decided, matching the pinned versions unless re-verified.
@@ -406,7 +429,7 @@ Requires: P-01's asmdefs in place; the Modular Avatar version range the integrat
 4. The separated code still follows case-2 rules (ordering, merge,
    removal) whenever it runs.
 
-## P-19 Audit and hand over
+## P-20 Audit and hand over
 Keys: audit, dependency closure, brace, JSON, GUID, static audit, handover, unconfirmed
 Case: both · Depth: SKILL.md Core Workflow step 7
 Requires: the package complete through the procedures it uses; the NEVER list (SKILL.md). Unity-side import is the user's environment to confirm; it is reported as unconfirmed and is never a gate the user must clear before the work proceeds.
@@ -429,7 +452,7 @@ Requires: the package complete through the procedures it uses; the NEVER list (S
 5. Real-machine verification is a separate batch; rows not
    yet run stay unconfirmed in the handover.
 
-## P-20 Remove generated components before Avatar Optimizer runs
+## P-21 Remove generated components before Avatar Optimizer runs
 Keys: Avatar Optimizer, AAO, unknown component, com.anatawa12.avatar-optimizer, ComponentInformation, Asset Description, DestroyImmediate
 Case: both · Depth: references/avatar-optimizer-compat.md
 Requires: the component's lifetime decided (build-time only, or present after AAO runs).
@@ -448,10 +471,10 @@ Requires: the component's lifetime decided (build-time only, or present after AA
    Description route is available; never use it for a component
    whose tool processes the avatar.
 
-## P-21 Diagnose a build problem
+## P-22 Diagnose a build problem
 Keys: debugging, ManualProcessAvatar, single-step, Step Back, ordering, VRCFury
 Case: both · Depth: references/debugging.md
-Requires: the failing project in the user's Unity Editor; a static audit (P-19) already done for code-side causes.
+Requires: the failing project in the user's Unity Editor; a static audit (P-20) already done for code-side causes.
 
 1. Wrong final output: run a manual build
    (AvatarProcessor.ManualProcessAvatar) and inspect the persisted
@@ -464,10 +487,10 @@ Requires: the failing project in the user's Unity Editor; a static audit (P-19) 
    plain build: check the split VRCSDK pipeline (Framework, VRChat
    build context) before suspecting the pass itself.
 
-## P-22 Build a component that adds parameters and menu items
+## P-23 Build a component that adds parameters and menu items
 Keys: menu generator component, adds parameters, menu items, ModularAvatarParameters, ModularAvatarMenuItem, provider, emit, presence check
 Case: 2 only · Depth: Expression Parameters and Expressions Menu (Components that add parameters and menu items); Modular Avatar Integration (Emitting Modular Avatar components)
-Requires: P-07 (the component's parameters supplied by a provider); parameter names and menu structure decided (P-12 and P-13 carry the declaration and menu rules).
+Requires: P-07 (the component's parameters supplied by a provider); parameter names and menu structure decided (P-13 and P-14 carry the declaration and menu rules).
 
 1. Make the component editor-only; it holds the definition only and
    generates nothing itself.
@@ -475,15 +498,15 @@ Requires: P-07 (the component's parameters supplied by a provider); parameter na
    them in Generating before anything is emitted.
 3. In Generating, ordered before Modular Avatar: for each component,
    add one ModularAvatarParameters to the component's own GameObject
-   declaring the parameters the controls bind (P-12), and build the
-   MenuItem hierarchy as child GameObjects of that GameObject (P-13,
+   declaring the parameters the controls bind (P-13), and build the
+   MenuItem hierarchy as child GameObjects of that GameObject (P-14,
    hierarchy route) — the placement fixes both the rename scope and
    the grouping of the items.
 4. Skip a component whose GameObject already carries the generated
    components, so the edit-time pre-generation route composes with
    this one.
 
-## P-23 Add animator output to the avatar's own controllers (case 1)
+## P-24 Add animator output to the avatar's own controllers (case 1)
 Keys: AnimatorServicesContext, virtual controller, VirtualAnimatorController, DependsOnContext, AnimLayerType, LayerPriority, ObjectPathRemapper
 Case: 1 · Depth: Animator Generation (Merging into the avatar, case 1)
 Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); the target playable layer decided.
@@ -494,7 +517,9 @@ Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); t
 2. Take the target VirtualAnimatorController from
    asc.ControllerContext.Controllers, keyed by
    VRCAvatarDescriptor.AnimLayerType for a playable layer.
-3. Register parameters with SetParameter. Add layers with
+3. Register parameters by handing fully constructed parameter
+   objects to the controller (Animator Generation, Merging into
+   the avatar, case 1). Add layers with
    AddLayer(LayerPriority, name), choosing the priority against the
    layers other passes add.
 4. Build states on the layer's StateMachine (AddState); virtualize
@@ -506,12 +531,12 @@ Requires: NDMF 1.7.0 or later (the version floor for AnimatorServicesContext); t
    NDMF commits the virtual controllers when the context
    deactivates. The layer's content — states, transitions, condition
    logic — follows the same procedures as on a generated controller
-   (P-09, P-10).
+   (P-09, P-11).
 
-## P-24 Package for VPM distribution
+## P-25 Package for VPM distribution
 Keys: VPM, VCC, package.json, vpmDependencies, legacyFolders, user packages, manifest, zipSHA256
 Case: both · Depth: references/vpm-packaging.md
-Requires: the package complete through P-19; the Assets path of any earlier Assets-based distribution, if one exists.
+Requires: the package complete through P-20; the Assets path of any earlier Assets-based distribution, if one exists.
 
 1. Check package.json against the required and recommended fields
    (VPM Packaging, Manifest) and fill what is missing.

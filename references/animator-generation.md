@@ -328,7 +328,7 @@ Decisions).
   the generating pass is ordered before it (Framework reference).
 - Remove the source components only after the merge component exists,
   and remove every found instance, including ones whose generation
-  failed (P-20).
+  failed (P-21).
 
 ### Case 1: edit the avatar's controllers through virtual controllers
 
@@ -347,8 +347,15 @@ descriptor itself. The context is available since NDMF 1.7.0
    playable layers are keyed by VRCAvatarDescriptor.AnimLayerType
    (FX, Gesture, and the rest); a scene Animator's controller is
    keyed by the Animator itself.
-3. Edit the virtual controller. SetParameter registers a parameter.
-   AddLayer(LayerPriority, name) adds a layer; the priority orders
+3. Edit the virtual controller. Register a parameter by handing a
+   fully constructed AnimatorControllerParameter to the controller:
+   `fx.Parameters = fx.Parameters.SetItem(name, parameter)`, or
+   `fx.SetParameter(name, parameter)`, which performs the same
+   assignment. Since NDMF 1.9.0 the framework clones a parameter
+   when it is set, and changing a parameter retrieved from the map
+   in place is detected and will become an error, so every field —
+   type and default included — is set on the new object before it
+   is handed over. AddLayer(LayerPriority, name) adds a layer; the priority orders
    it against layers other passes add, without index arithmetic.
    Build states on the layer's StateMachine (AddState), and
    virtualize every real Motion with
@@ -375,12 +382,13 @@ class AddFxLayerPass : Pass<AddFxLayerPass>
         var asc = ctx.Extension<AnimatorServicesContext>();
         var fx = asc.ControllerContext.Controllers[
             VRCAvatarDescriptor.AnimLayerType.FX];
-        fx.SetParameter("MyToggle", new AnimatorControllerParameter
-        {
-            name = "MyToggle",
-            type = AnimatorControllerParameterType.Bool,
-            defaultBool = false,
-        });
+        fx.Parameters = fx.Parameters.SetItem("MyToggle",
+            new AnimatorControllerParameter
+            {
+                name = "MyToggle",
+                type = AnimatorControllerParameterType.Bool,
+                defaultBool = false,
+            });
         var layer = fx.AddLayer(LayerPriority.Default, "MyPlugin");
         layer.DefaultWeight = 1;
         var state = layer.StateMachine.AddState("Active",

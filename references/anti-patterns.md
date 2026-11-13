@@ -28,7 +28,7 @@ it, the way an editor tool edits a project asset.
 Breaks: it mutates the author's asset and races Modular Avatar's own
 cloning and merging; in a build pass it also breaks the guarantee that
 the build works on a clone and the author's assets survive.
-(NEVER #3, #9; P-09, P-11, P-23)
+(NEVER #3, #9; P-09, P-12, P-24)
 
 ## 4. Calling a helper from a library the package does not depend on
 Habit: a well-known library has exactly the conversion or utility
@@ -39,14 +39,14 @@ machine — and fails in any project that does not install it. The
 failure is not visible in the call itself: its signature genuinely
 matches the reference it was taken from. What differs is the project
 it compiles in.
-(P-08 step 3; P-19 step 2)
+(P-08 step 3; P-20 step 2)
 
 ## 5. Taking SDK names from documentation or memory
 Habit: type the field or enum name as the documentation shows it, or as
 remembered.
 Breaks: documentation shows display names; the C# identifier differs,
 and the error only appears when the user imports the package.
-(NEVER #8; P-10 step 3)
+(NEVER #8; P-11 step 3)
 
 ## 6. Ordering passes by feel
 Habit: register the pass in whatever phase seems late enough, or add the
@@ -54,7 +54,7 @@ merge component whenever the controller is ready.
 Breaks: Modular Avatar consumes merge components in its own phase; a
 merge component added after that is silently dropped and the generated
 layers never reach the avatar, with no error.
-(NEVER #4; P-03, P-11)
+(NEVER #4; P-03, P-12)
 
 ## 7. Cleaning up first
 Habit: DestroyImmediate the source components at the start of the pass
@@ -62,7 +62,7 @@ Habit: DestroyImmediate the source components at the start of the pass
 Breaks: a component destroyed before its validation runs is never
 validated and never reported; the build proceeds as if it had not
 been there.
-(NEVER #5; P-11 step 3, P-20)
+(NEVER #5; P-12 step 3, P-21)
 
 ## 8. Debug.Log for validation
 Habit: log the problem and continue, as in a runtime tool.
@@ -85,7 +85,7 @@ locate targets when generating.
 Breaks: earlier passes replace objects (reactive generation, merging,
 cloning); a name or path found before that no longer denotes the object
 in the build, or denotes a different one.
-(P-14, Requires)
+(P-15, Requires)
 
 ## 11. Skipping asmdefs because it compiles at home
 Habit: drop scripts into folders and let the predefined assemblies sort
@@ -103,14 +103,14 @@ Breaks: the avatar has one 256-bit sync budget shared by everything on
 it, and parameter names are a compatibility surface across products;
 collisions and budget overflow surface as build errors on the user's
 avatar, not in the plugin's test scene.
-(P-12)
+(P-13)
 
 ## 13. Driving one property through two routes
 Habit: add a Reactive Component for a property and also generate a clip
 that animates it, "to be safe".
 Breaks: the two routes fight over the same binding; the result depends
 on evaluation order and breaks when either side changes.
-(P-14 step 4)
+(P-15 step 4)
 
 ## 14. No preview story
 Habit: check the effect in Play mode, as with a plain Unity tool.
@@ -118,7 +118,7 @@ Breaks: the build-time avatar differs from the live scene (generation,
 merging and reactive evaluation happen in the build), so Play mode
 shows something the upload will not match, and the author gets no
 editor feedback before building.
-(P-17)
+(P-18)
 
 ## 15. Using a type name that matches the namespace's last segment
 Habit: declare the namespace the asmdef's rootNamespace suggests
@@ -128,7 +128,7 @@ itself, not to UnityEditor.Editor, and the package fails to compile
 at the user's first import (CS0118). The same resolution failure
 occurs at every other type-position use of the name, such as
 `typeof(Editor)`.
-(P-19 step 1)
+(P-20 step 1)
 
 ## 16. Assuming the overload that reads naturally exists
 Habit: call an editor API in the shape that feels obvious, such as
@@ -136,7 +136,7 @@ Habit: call an editor API in the shape that feels obvious, such as
 Breaks: that overload does not exist; the string binds to a
 params GUILayoutOption[] overload instead, and the import fails
 (CS1503) at every call site that used the shape.
-(P-19 step 1)
+(P-20 step 1)
 ## 17. Converting only the live value of something animation also drives
 
 Habit: a converter that rewrites renderer materials and component fields

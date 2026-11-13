@@ -65,6 +65,14 @@ ModularAvatarMaterialChanger, ModularAvatarMaterialSetter,
 ModularAvatarMaterialSwap, ModularAvatarMeshCutter and
 ModularAvatarReactiveMove.
 
+The tracking that drives these components — a parameter that
+follows an object's active state — is Modular Avatar's internal
+service and not public. A plugin that needs the same input without
+emitting reactive components provides its own tracking (Reactive
+Tracking): its component is then a generator of its own animator
+output, not a reactive component, and MA's reactive system neither
+analyzes nor drives it.
+
 Rules for a plugin working alongside or on top of them:
 
 - If the effect a product wants is exactly what a reactive component
@@ -76,12 +84,6 @@ Rules for a plugin working alongside or on top of them:
   and do not read a reactive component's state after MA's reactive passes
   have consumed it. Treat the components as inputs that exist up to MA's
   Transforming-phase processing.
-- A custom component of your own does not become reactive by deriving from
-  ModularAvatarComponent alone. Becoming part of the reactive system means
-  implementing MA's reactive object analysis for it, which is an MA-internal
-  extension point; unless the product is prepared to maintain that, model
-  the product's own component as a generator that emits built-in reactive
-  components or animator output instead.
 - Parameter names a reactive component responds to are ordinary avatar
   parameters: the same ParameterInfo validation applies to them as to any
   condition parameter.

@@ -19,15 +19,15 @@ merges animator output, and reports problems through `ErrorReport`.
 ## Contents
 
 - `SKILL.md` — the entry point: scope, the NEVER list of prohibitions,
-  design decisions, the core workflow, a reference loading guide, and
-  the terminology table.
+  design decisions, the core workflow, and the table of contents.
 - `CHEATSHEET.md` — the plugin skeleton, the asmdef assembly tables,
   and the package.json tables.
 - `references/` — one file per subject: framework, animator generation,
-  Modular Avatar integration, parameters, error reporting, Expression
-  Parameters and Expressions Menu, manipulation techniques, the VRChat
-  avatar platform, VPM packaging, Avatar Optimizer compatibility,
-  debugging, anti-patterns, and the procedure index (P-01 to P-23).
+  reactive tracking, Modular Avatar integration, parameters, error
+  reporting, Expression Parameters and Expressions Menu, manipulation
+  techniques, the VRChat avatar platform, VPM packaging, Avatar
+  Optimizer compatibility, debugging, anti-patterns, and the procedure
+  index (P-01 to P-25).
 - `skill.yaml` — the skill manifest.
 
 ## Use

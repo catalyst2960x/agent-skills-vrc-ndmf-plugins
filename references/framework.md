@@ -63,7 +63,7 @@ The pass receives a `BuildContext` with, among others:
   `ObjectRegistry.RegisterReplacedObject(old, new)` records the
   replacement so a later pass or error reporting that still holds
   the original can resolve it; register when such a holder may
-  exist (P-15). Use
+  exist (P-16). Use
   `ObjectRegistry.GetReference(obj)` when a stable reference is needed for
   errors or for state.
 - Extension methods in `nadena.dev.ndmf` (and the VRChat extensions in
@@ -113,7 +113,7 @@ Separate from the build pipeline, NDMF runs a preview system in the
 editor (namespace nadena.dev.ndmf.preview). The filter contract, Modular
 Avatar's per-component preview filters, and the decision order for a
 product's preview story are specified in Modular Avatar Integration
-(Preview); the procedure is P-17. This is how Modular Avatar previews
+(Preview); the procedure is P-18. This is how Modular Avatar previews
 its Reactive Components.
 
 ## VRChat build context

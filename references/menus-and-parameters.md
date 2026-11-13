@@ -141,7 +141,7 @@ Two routes, both consumed by MA at build time:
   sequentially in hierarchy order — the standard way to build a group
   of toggles over one Int parameter. A generator that relies on
   automatic creation must set these flags deliberately; declaring the
-  parameter explicitly (P-12) is the controlled route.
+  parameter explicitly (P-13) is the controlled route.
 - Puppet controls bind their axes through the control's sub-parameters,
   not its main parameter. A radial-driven effect often needs a companion
   parameter marking "the value is being changed" so other states can

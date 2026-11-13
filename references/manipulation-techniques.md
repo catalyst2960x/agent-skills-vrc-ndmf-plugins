@@ -24,13 +24,17 @@ exist, and they compose per property, not per product:
 - **Manual route (both cases).** Generate AnimationClips holding the
   property bindings below, and drive them with the layer/state pattern
   or a Direct Blend Tree layer (Animator Generation) — blend trees
-  also carry the discrete values there. The
+  also carry the discrete values there. A manually generated layer's
+  conditions can also follow a GameObject's active state, through a
+  tracked proxy parameter (Reactive Tracking). A layer that follows
+  activation this way remains the manual route: the controller is one
+  the plugin generated itself. The
   plugin owns arbitration: two layers animating the same property fight,
   and layer order decides the winner.
 
 Static manipulation is the third option for changes that do not need a
 parameter. It has two shapes: the plugin's own directive component,
-whose settings its pass applies to the build-time clone (P-16) — the
+whose settings its pass applies to the build-time clone (P-17) — the
 pass edits the clone directly (activate, reparent, delete, replace
 materials, edit assets) — and, in dependency case 2, an existing
 Modular Avatar directive component the plugin emits and configures
@@ -64,7 +68,7 @@ asset.
 
 ## Converting shared assets in a pass
 
-P-15 in the Procedure Index runs this section, with Direct editing
+P-16 in the Procedure Index runs this section, with Direct editing
 and the framework surface above, as a procedure.
 
 The recurring shape of a conversion pass (a material swap is the
@@ -76,7 +80,7 @@ common case):
   original always maps to the same clone. Then clone, change the
   clone, and rewrite every reference through that one mapping;
   register each replacement with the ObjectRegistry when another
-  pass may already hold the original (P-15).
+  pass may already hold the original (P-16).
   Rewriting only the live values leaves the animated overrides
   pointing at the original, and the avatar snaps back the first time
   such an animation plays.
