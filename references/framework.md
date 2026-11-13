@@ -1,6 +1,6 @@
 # NDMF Framework Reference
 
-Facts are those of NDMF 1.15.0-beta.5 (package nadena.dev.ndmf). Re-verify
+Facts are those of NDMF 1.15.* (package nadena.dev.ndmf). Re-verify
 against the installed version before relying on a signature: its API
 surface moves between versions.
 
@@ -129,7 +129,7 @@ after Transforming, in addition to the end-of-build serialization.
 
 ## Version floors
 
-The APIs in this file are those of NDMF 1.15.0-beta.5; they arrived
+The APIs in this file are those of NDMF 1.15.*; they arrived
 incrementally, and the floors that matter are:
 ErrorReport and ObjectRegistry 1.3.0; the preview framework 1.5.0;
 IAssetSaver and [DependsOnContext] 1.6.0; AnimatorServicesContext and

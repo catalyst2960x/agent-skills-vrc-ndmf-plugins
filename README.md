@@ -11,8 +11,7 @@ merges animator output, and reports problems through `ErrorReport`.
 ## Scope
 
 - Unity 2022 LTS, VRChat Avatars SDK (SDK3A), editor-only plugins.
-- Facts are anchored to NDMF 1.15.0-beta.5 and Modular Avatar
-  1.19.0-rc.1.
+- Facts are anchored to NDMF 1.15.* and Modular Avatar 1.19.*.
 - Exactly two dependency cases are covered: (1) NDMF only, and
   (2) NDMF + Modular Avatar.
 - Out of scope: VRChat worlds and Udon, and shader work.

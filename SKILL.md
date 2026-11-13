@@ -1,5 +1,5 @@
 ---
-name: agent-skills-vrc-ndmf-plugins
+name: ndmf_plugin_development
 description: "VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects."
 ---
 
@@ -22,8 +22,8 @@ as a package dependency the same way in both cases (VPM Packaging).
 2. **NDMF + Modular Avatar (MA)** — the plugin depends on NDMF and
    Modular Avatar.
 
-Dependency versions: NDMF 1.15.0-beta.5, Modular Avatar
-1.19.0-rc.1. NDMF APIs move between versions, so Step 1 of the workflow
+Dependency versions: NDMF 1.15.*, Modular Avatar 1.19.*.
+NDMF APIs move between versions, so Step 1 of the workflow
 re-verifies every API against the installed version before use.
 
 Load this skill before designing or writing an NDMF plugin, even for one pass.
