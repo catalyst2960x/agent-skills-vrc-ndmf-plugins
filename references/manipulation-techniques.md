@@ -27,6 +27,29 @@ parameter: the pass edits the build-time clone directly (activate,
 reparent, delete, replace materials), registering replacements with the
 ObjectRegistry so later passes and other plugins see the new objects.
 
+## Direct editing and the framework surface
+
+Editing mesh data (vertices, normals, UVs, blend shape frames, bone
+weights and bind poses), texture pixels, or a cloned material's
+values has no NDMF or Modular Avatar API. The framework surface for
+such work is the two NDMF services and the Modular Avatar components
+named here; the data editing itself is Unity API work on the cloned
+asset.
+
+- NDMF: register the replacement with ObjectRegistry and persist
+  created assets through the build's asset saver (Framework;
+  Converting shared assets in a pass). Nothing in NDMF reads or
+  writes mesh, texture, or material data.
+- Modular Avatar's manipulation components are the case 2 route.
+  ModularAvatarMeshCutter removes the vertices its built-in filters
+  select (by axis, bone, mask texture, blend shape, or UV tile)
+  during reactive processing; the filtering internals are internal
+  to Modular Avatar, so a plugin emits the component and does not
+  register filters of its own. ModularAvatarBoneProxy retargets the
+  bone a binding follows. ModularAvatarMeshSettings sets a mesh's
+  root bone and bounds. Material changes use the material reactive
+  components (Modular Avatar Integration).
+
 ## Converting shared assets in a pass
 
 The recurring shape of a conversion pass (a material swap is the

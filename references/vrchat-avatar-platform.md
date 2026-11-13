@@ -3,6 +3,9 @@
 The VRChat-side facts a plugin's generated output must satisfy: playable
 layers, built-in animator parameters, state behaviour semantics, allowed
 components, and the parameters that VRChat components themselves write.
+Where this file states a requirement or a definition, the requiring party
+is the VRChat avatar SDK, SDK3A: these are SDK3A requirements and
+definitions, not conventions of NDMF, Modular Avatar, or this skill.
 Facts are those of the VRChat documentation at creators.vrchat.com
 (URLs per section). These pages describe the live platform, not an SDK version:
 re-check the page when behaviour seems to have moved, and verify C#
@@ -15,6 +18,7 @@ it.
 
 - [Playable Layers](#playable-layers)
 - [Built-in Animator Parameters](#built-in-animator-parameters)
+- [Parameter Type Conversion](#parameter-type-conversion)
 - [State Behaviour Semantics](#state-behaviour-semantics)
 - [Allowed Avatar Components](#allowed-avatar-components)
 - [Stations](#stations)
@@ -69,13 +73,15 @@ Source: https://creators.vrchat.com/avatars/playable-layers
 
 Source: https://creators.vrchat.com/avatars/animator-parameters/
 
-VRChat maintains these parameters on every avatar. They are read-only
+These parameters are SDK3A definitions: VRChat maintains them on every
+SDK3 avatar. They are read-only
 (they cannot be set from the Expressions Menu, by OSC, or by a
 parameter driver), they are used by adding them to a controller, they
 do not need an Expression Parameters entry, and they do not consume the
 custom parameter budget (Expression Parameters and Expressions Menu). Generated conditions
-may read any of them; validate them through ParameterInfo like any
-other name (Parameters).
+may read any of them; their types come from this catalogue, not from
+ParameterInfo (Animator Generation, Built-in parameters in generated
+output).
 
 | Name | Type | Notes |
 | --- | --- | --- |
@@ -99,7 +105,7 @@ other name (Parameters).
 | Earmuffs | Bool | Earmuff mode on |
 | IsOnFriendsList | Bool | Viewer is friends with the wearer; false locally |
 | AvatarVersion | Int | 3 for SDK3 avatars |
-| IsAnimatorEnabled | Bool | False one frame before the animator is disabled |
+| IsAnimatorEnabled | Bool | False one frame before the animator is disabled; the disable is a viewing client culling a remote avatar, so the value is per client and not synced |
 
 Eye/face tracking group (Bool, computed per client from received
 tracking data, so remote values can differ from the wearer's):
@@ -113,6 +119,29 @@ Custom parameters, for contrast: at most 8192 total per avatar (synced
 and unsynced); cross-platform (PC/Quest) sync matches parameters by
 their position in the Expression Parameters list and their type, not
 by name — use the same asset for both platform uploads.
+
+## Parameter Type Conversion
+
+A parameter carries two types: the source type — the built-in's type
+(above) or the Expression Parameters declaration's type — and the
+animator type, the type the parameter is declared with in an
+AnimatorController's parameter list. When the two differ, VRChat
+converts the value to the animator type at runtime:
+
+| Source type | Animator type | Conversion |
+| --- | --- | --- |
+| Int | Float | The value as a float (1 → 1.0) |
+| Int | Bool | 0 is false; anything else is true |
+| Float | Int | Rounded to the closest int (0.5 → 0, 0.6 → 1, 1.5 → 2) |
+| Float | Bool | 0.0 is false; anything else is true |
+| Bool | Int | true is 1; false is 0 |
+| Bool | Float | true is 1.0; false is 0.0 |
+
+The conversion applies per controller: two controllers that declare
+the same parameter with different animator types read different
+values from the same source. A mismatch is defined behaviour, not
+an error; it is also how a Bool built-in can drive a Blend Tree, by
+being declared Float in that controller.
 
 ## State Behaviour Semantics
 

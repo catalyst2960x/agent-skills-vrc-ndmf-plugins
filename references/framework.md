@@ -22,6 +22,7 @@ Built-in phases run in this order:
 
 | Phase | Intended use (per the NDMF source comments) |
 | --- | --- |
+| FirstChance | Runs before platform initialization, for plugins that must run before everything else; EditorOnly objects are not yet removed in this phase |
 | PlatformInit | Platform setup before everything |
 | Resolving | Very early processing of components and avatar state, before large-scale changes; Modular Avatar (MA) resolves serialized references and clones controllers here. NDMF's built-in pass also removes EditorOnly objects in this phase |
 | Generating | Generate components that later plugins consume. A pass that creates components or merge requests for Modular Avatar belongs here |
@@ -88,7 +89,7 @@ belong with it:
   - Components implementing IEditorOnly are removed by the VRChat
     SDK, after the NDMF optimize hook: the SDK's
     RemoveAvatarEditorOnly follows the -1025 callback that runs
-    Optimizing through Last. A plugin whose component must not be
+    Optimizing through PlatformFinish. A plugin whose component must not be
     visible to an Optimizing-phase processor removes it itself
     before then (Avatar Optimizer Compatibility, Route 1).
   NDMF's own `INDMFEditorOnly` is the portable form of the marker: it
@@ -116,8 +117,8 @@ that extension; new code uses the extension.
 
 On a VRChat build, NDMF does not run as one block: it registers two
 VRCSDK preprocess callbacks. The first (callbackOrder -11000) runs the
-phases from First through Transforming; the second (-1025, just before
-the SDK's RemoveAvatarEditorOnly) runs Optimizing through Last.
+phases from FirstChance through Transforming; the second (-1025, just before
+the SDK's RemoveAvatarEditorOnly) runs Optimizing through PlatformFinish.
 Anything hooking the VRCSDK chain between those orders — VRCFury, at
 about -10000, is the common case — therefore runs between NDMF's
 Transforming and Optimizing phases: earlier passes cannot see its

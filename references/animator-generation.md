@@ -10,12 +10,34 @@ bookkeeping (asset containers, state identity) in that one layer.
 
 ## The layer/state pattern
 
-- One AnimatorController per pass, one layer per component or setting.
-  Layer name identifies the source (for example
-  `SoundEffect [<GameObject name>]`); set the layer's defaultWeight
-  to 1 or the layer silently contributes nothing.
-- States: `idle` (the default state), `active`, and optionally `pre_active`
-  when a two-stage condition is wanted. Generated states set
+Choose the shape per feature before building, and weigh both costs.
+A feature that needs transitions or behaviour on state entry takes a
+state-machine layer from this section. A value-driven setting — a
+toggle, a selector, a graded value — that needs neither can go in
+the Direct Blend Tree shape (Direct Blend Tree layers): the product
+stays at one layer however many such features it has, at the price
+of evaluating every driven property every frame, so the tree's cost
+grows with the feature count. State-machine layers cost a layer per
+feature instead, and a layer resting in its idle state evaluates
+almost nothing.
+
+- One AnimatorController per pass. The pattern's default is one
+  layer per component or setting; a component whose design separates
+  concerns — different blending or weight, a behaviour to isolate —
+  may build several layers. Layer name identifies the source (for
+  example
+  `<product name> [<GameObject name>]`); set the layer's defaultWeight
+  to 1 or the layer silently contributes nothing. Names within one
+  generated controller are distinct: when two components would yield
+  the same name, the generator makes them distinct by its own
+  deterministic rule, assigned in collection order so repeated
+  builds produce the same names.
+- States: `idle` (the default state), `active`, and optionally an
+  intermediate state when a two-stage condition is wanted: the
+  intermediate state is entered on a preliminary condition set and
+  latches — it is held while the main condition set is awaited, with
+  no return to idle. State names are the product's; the roles are
+  what the pattern fixes. Generated states set
   writeDefaultValues = false and share one empty Motion (a Direct
   Blend Tree layer is the exception: VRChat Avatar Platform,
   Playable Layers).
@@ -32,14 +54,17 @@ bookkeeping (asset containers, state identity) in that one layer.
 
 - Forward transitions carry all conditions of their set (AND), with
   hasExitTime = false, hasFixedDuration = true, duration = 0, exitTime = 0.
-  With a pre_active stage, idle → pre_active carries the pre-conditions and
-  pre_active → active carries the main conditions. The reference pattern
-  creates no pre_active → idle return; once the pre-conditions have fired,
-  the layer waits in pre_active for the main conditions.
+  With an intermediate stage, idle → intermediate carries the preliminary
+  conditions and intermediate → active carries the main conditions. The
+  reference pattern creates no intermediate → idle return; once the
+  preliminary conditions have fired,
+  the layer waits in the intermediate state for the main conditions.
 - Return to idle, two options:
   - **Reversed conditions**: one transition per condition, each carrying
     that condition reversed. Separate transitions make the return an OR of
-    the negations, which is the correct negation of the forward AND. A
+    the negations, which is the correct negation of the forward AND (for
+    Float comparisons, exact except at the threshold point itself; see the
+    note under the reversal table). A
     single transition carrying all reversed conditions would wait for every
     negation at once and is wrong.
   - **Free return**: one condition-less transition with hasExitTime = true,
@@ -59,17 +84,76 @@ bookkeeping (asset containers, state identity) in that one layer.
 
   The ±1 for Int converts between strict and non-strict comparisons
   (value > t negates to value ≤ t, expressed as value < t+1). Float
-  thresholds are unchanged. The parameter type comes from ParameterInfo,
-  not from the condition itself.
+  thresholds are unchanged, and for Float the reversal is not exact:
+  a Float parameter supports only the Greater and Less modes, so no
+  condition expresses value ≤ t, and at value == threshold neither
+  the forward nor the return transition fires — the layer holds its
+  current state. The Int shift has no Float analogue because the
+  domain has no smallest step. The case that bites is a threshold at
+  a value the parameter rests at (0 for Voice or a PhysBone's
+  Stretch, for example): once the layer has entered active, returning
+  to exactly that value does not return it. A design that must reset
+  at the threshold uses a Bool-typed condition instead (If and IfNot
+  are exact), or the free return. The parameter type comes from ParameterInfo,
+  not from the condition itself — for a built-in parameter, from the
+  platform catalogue (Built-in parameters in generated output).
+- Reversal and thresholds are computed in the parameter's source type.
+  If the generated controller registers a different type, VRChat
+  converts the value before the conditions evaluate it (VRChat Avatar
+  Platform, Parameter Type Conversion) and the arithmetic above no
+  longer describes the behaviour: a Float parameter read as Int has
+  already rounded, so a threshold at 0.5 is evaluated against 0 or 1.
+  Generated output registers the source type (Parameters).
 - Only parameters that exist in the build-time parameter set may be added
   to the generated controller as AnimatorControllerParameters, each once
-  (see Parameters).
+  (see Parameters). Built-in parameters are the exception: register them
+  with their catalogue type (Built-in parameters in generated output).
 - An empty condition set is a real configuration, not an error: the
   forward transition carries no conditions and fires unconditionally, and
   the reversed set is empty, so no return transitions are generated and
   the layer stays active. Decide whether that is the product's intent
   (for an always-on effect it is); if a return is required, the design
   needs conditions or the free return.
+
+## Built-in parameters in generated output
+
+VRChat's built-in parameters (VRChat Avatar Platform, Built-in
+Animator Parameters) can carry generated conditions, and they differ
+from declared parameters in three ways:
+
+- They are not in the build-time parameter set. No parameter
+  provider supplies them, so ParameterInfo never returns them, and
+  their types cannot come from it either. Take a built-in's type
+  from the platform catalogue — condition reversal needs it. The
+  name itself needs no validation; names are accepted as entered.
+- Their names and types are fixed by the platform. Register a used
+  built-in on the generated controller with the catalogue's type,
+  once, like any used parameter. Never declare a built-in as the
+  plugin's own parameter, in Expression Parameters or through a
+  parameter provider, and never rename one. Modular Avatar's
+  parameter handling rests on the same basis: its parameter probing
+  skips the SDK-predefined names and does not offer them as
+  remappable, and that set includes IsAnimatorEnabled.
+- IsAnimatorEnabled carries a timing property the others do not:
+  it goes false one frame before the avatar's animator is disabled
+  on a client, and while the animator is disabled every layer
+  freezes in its current state. A layer whose active state must
+  not persist frozen — one holding a one-shot behaviour or
+  driver-written values, for example — can add one more return
+  transition carrying only IsAnimatorEnabled IfNot, next to its
+  per-condition reversed transitions, so the layer settles to idle
+  in that final frame. The disable it warns of is a viewing client
+  culling a remote avatar, distance-hidden being the standing case:
+  the wearer's own client does not observe it, the parameter is not
+  synced, and its value differs per client, so the response has to
+  be built into the layer itself. The critical cases are the ones
+  whose frozen residue persists or whose completion never runs: a
+  state holding Parameter Driver-written values (they stay written
+  while the animator is off), a state whose cleanup runs on exit
+  (the exit never runs once disabled), and a state entered for a
+  momentary effect (it persists as if permanent). A toggle whose
+  active state is a stable configuration needs none of this.
+  Whether a layer needs this is a per-layer design decision.
 
 ## Direct Blend Tree layers
 
@@ -182,10 +266,17 @@ for (int i = 0; i < children.Length; i++)
 root.children = children;
 ```
 
-- Blend trees blend on floats, so every parameter in the layer is
-  registered on the controller as a Float with its default as the
-  default value — two-state parameters included (0/1). A name shared
-  with the Expression Parameters is declared Float there as well.
+- Blend trees blend on floats, so every parameter the layer blends on
+  is registered on the controller as a Float with its default as the
+  default value — two-state parameters included (0/1). That
+  controller-side Float is the standing exception to registering the
+  source type (P-08): VRChat converts the value per controller, and a
+  Bool or Int source converts to exactly 0.0 or 1.0 (VRChat Avatar
+  Platform, Parameter Type Conversion), so the thresholds describe
+  the behaviour. The Expression Parameters declaration is not
+  changed: it carries the parameter's own type, and a two-state
+  parameter stays Bool — declared as Float it would cost 8 sync bits
+  instead of 1.
 - Because the state runs with Write Defaults on, every property a
   sub-tree drives must be present in both of its clips: the
   default-state clip carries the resting values, and a property
@@ -193,6 +284,10 @@ root.children = children;
   its weight is 0.
 - Cost: the whole product is one layer regardless of feature count,
   and every driven property is evaluated every frame.
+- Merging (dependency case 2): emit the merge component with
+  matchAvatarWriteDefaults = false for this layer. Matching rewrites
+  state Write Defaults to the target controller's convention and
+  would turn this state's on setting off (Merging into the avatar).
 
 ## Mapping component fields onto an SDK behaviour
 
@@ -206,8 +301,8 @@ root.children = children;
   first that the target is the root or a descendant, so the walk is
   guaranteed to terminate at the root.
 - The path basis must match the merge: when the controller is merged
-  with a relative path mode, a behaviour's path field (a Play Audio
-  Source Path, for example) is interpreted relative to the merge root
+  with a relative path mode, a behaviour's path field
+  is interpreted relative to the merge root
   and rewritten on merge, and nothing auto-corrects a path written
   against a different root. Compute behaviour paths against the same
   root the merge will use.
@@ -223,13 +318,17 @@ Decisions).
 
 - Add one ModularAvatarMergeAnimator to the avatar root with the generated
   controller: animator = the controller, layerType = FX (or the layer the
-  product targets), matchAvatarWriteDefaults = true when the generated
-  states assume Modular Avatar's write-defaults handling.
+  product targets), matchAvatarWriteDefaults per the generated output's
+  shape. Matching rewrites each merged state's Write Defaults to the
+  target controller's convention: set it true for the layer/state
+  pattern, whose states are built to that convention, and false for a
+  Direct Blend Tree layer, whose state must keep Write Defaults on
+  (Direct Blend Tree layers) — matching would rewrite it off.
 - Modular Avatar consumes merge components in its own passes, which is why
   the generating pass is ordered before it (Framework reference).
 - Remove the source components only after the merge component exists,
   and remove every found instance, including ones whose generation
-  failed (P-19).
+  failed (P-18).
 
 ### Case 1: edit the avatar's controllers through virtual controllers
 
@@ -317,15 +416,16 @@ expose.
 - VRChat's built-in animator parameters are ordinary parameter names
   from the generator's point of view: treat the names as constants
   defined in one place in the product, verified against the SDK
-  documentation, and validate them through ParameterInfo like any
-  other name (Parameters).
+  documentation. Their validation and registration differ from
+  declared parameters (Built-in parameters in generated output).
 
 ## Output routes, including the destructive one
 
 | Route | Dependency case | When it fits | Cost |
 | --- | --- | --- | --- |
 | New controller + MergeAnimator | Case 2 (NDMF + MA) | Plugin products distributed to other authors | Output is additive and removable; the pass must run before MA |
-| Plugin-managed controller | Case 1 (NDMF only) | The plugin must add animator output without MA | The plugin clones the target controller inside the pass and owns all bookkeeping; never mutate the shared asset |
+| Virtual controllers (AnimatorServicesContext) | Case 1 (NDMF only) | The plugin must add animator output without MA | Edits commit to build-owned copies when the context deactivates; the plugin clones no controller asset and owns no controller bookkeeping |
+| Clone and assign | Case 1 (fallback) | The edit replaces a whole playable-layer controller, or the virtual objects do not expose the edit | The plugin owns the cloned controller's bookkeeping; never mutate the shared asset |
 | Destructive, into the descriptor's controllers | Neither (editor tooling, outside a plugin build) | Tooling the avatar's own author runs deliberately on their own project, especially over hand-authored controllers | Mutates the author's assets; needs its own undo/backup story |
 
 The destructive route, as a pattern: the generator binds itself to the

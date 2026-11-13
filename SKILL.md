@@ -1,6 +1,6 @@
 ---
 name: agent-skills-vrc-ndmf-plugins
-description: Build VRChat avatar NDMF (Non-Destructive Modular Framework) plugins (editor-only component plus build-time pass) that validate against ParameterInfo, generate and merge animator output, and report through ErrorReport. Covers the two dependency cases, NDMF only and NDMF + Modular Avatar. Dependencies and versions are listed in SKILL.md.
+description: VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects.
 ---
 
 # NDMF Plugin Development
@@ -45,7 +45,7 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | [Error Reporting](references/error-reporting.md) | Reporting through ErrorReport: SimpleError, severities, the validation severity policy | `references/error-reporting.md` |
 | [Expression Parameters and Expressions Menu](references/menus-and-parameters.md) | Reading/writing Expression Parameters and Expressions Menus, providers, budget | `references/menus-and-parameters.md` |
 | [Manipulation Techniques](references/manipulation-techniques.md) | Driving objects, blendshapes, and shader parameters: reactive vs manual routes, property bindings | `references/manipulation-techniques.md` |
-| [Anti-Patterns](references/anti-patterns.md) | Unity habits that break under NDMF/MA, and the rule that replaces each: for reviewing code written without framework knowledge | `references/anti-patterns.md` |
+| [Anti-Patterns](references/anti-patterns.md) | Unity habits that break under NDMF/MA, explained as patterns: for reviewing code written without framework knowledge | `references/anti-patterns.md` |
 | [VRChat Avatar Platform](references/vrchat-avatar-platform.md) | VRChat-side facts the generated output must satisfy: playable layers, built-in parameters, behaviour semantics, allowed components, stations, spatial audio, component-generated parameters | `references/vrchat-avatar-platform.md` |
 | [VPM Packaging](references/vpm-packaging.md) | VRChat-side requirements for delivering a plugin as a VPM package: manifest fields, dependency ranges, legacy migration from Assets, user-package testing | `references/vpm-packaging.md` |
 | [Avatar Optimizer Compatibility](references/avatar-optimizer-compat.md) | Keeping a plugin's components from triggering AAO's unknown-component warning: remove before AAO, or register with its API | `references/avatar-optimizer-compat.md` |
@@ -58,36 +58,13 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | --- | --- | --- | --- |
 | 1 | Report a build problem with Debug.Log | The log is not the build report; the author never sees the failure tied to the component | NDMF ErrorReport with the component's GameObject as context (see Error Reporting) |
 | 2 | Read the VRCExpressionParameters asset directly to learn parameter names and types | Other plugins rename, add and sync parameters during the build; the asset is not the build-time truth | ParameterInfo.ForContext(ctx).GetParametersForObject(avatarRoot), keyed by EffectiveName |
-| 3 | Edit the avatar's existing FX controller asset in place | Mutates the author's asset and races with Modular Avatar's own cloning and merging | Generate a new AnimatorController in the pass and merge it (Animator Generation) |
+| 3 | Edit the avatar's existing FX controller asset in place | Mutates the author's asset and races with Modular Avatar's own cloning and merging | Case 2: generate a new AnimatorController in the pass and merge it. Case 1: edit through virtual controllers (Animator Generation, Merging into the avatar) |
 | 4 | Add a ModularAvatarMergeAnimator from a pass that runs after Modular Avatar | MA has already consumed the merge components; the generated controller is silently dropped | Order the pass InPhase(BuildPhase.Generating).BeforePlugin("nadena.dev.modular-avatar") |
-| 5 | Destroy a source component before its validation and generation have run, or leave a found instance of it on the avatar | An early destroy skips that component's error report; a leftover instance reaches Avatar Optimizer as an unknown component | Process every found instance first, then DestroyImmediate every found instance, success or failure; removal acts on the build clone only, and failures are reported through ErrorReport (P-19) |
+| 5 | Destroy a source component before its validation and generation have run, or leave a found instance of it on the avatar | An early destroy skips that component's error report; a leftover instance reaches Avatar Optimizer as an unknown component | Process every found instance first, then destroy every found instance, success or failure; removal acts on the build clone only (P-18) |
 | 6 | Use GameObject active state (or any runtime script) as the trigger | An uploaded avatar runs no user scripts; there is no runtime to observe it | Animator parameter conditions (the Driver pattern), or MA reactive components |
-| 7 | Trust serialized arrays and elements to be non-null | Data written by older versions or by script can carry null arrays and null elements into the pass | Sanitize once at the top of the pass (null array = empty, drop null elements) and use the sanitized arrays everywhere |
+| 7 | Trust serialized arrays and elements to be non-null | Data written by older versions or by script can carry null arrays and null elements into the pass | Sanitize once at the top of the pass (null array = empty, drop null elements) and use the sanitized arrays everywhere (P-04) |
 | 8 | Take SDK field or enum names from documentation or memory | Doc names are display names; a wrong C# identifier only fails on the user's machine | Verify against code that compiles against the SDK, or the SDK itself; mark anything unverified |
 | 9 | Generate destructively into the avatar descriptor's own animator controllers inside a distributed plugin's build pass | The NDMF build runs on a clone so the author's assets survive it; writing into their controllers breaks that guarantee and races MA | Destructive routes belong to editor tooling the author runs deliberately (Animator Generation); distributed plugins generate and merge |
-
-## Reference Loading Guide
-
-| Task | MANDATORY READ | Optional | Do NOT Load |
-| --- | --- | --- | --- |
-| Know the task, need the procedure (any task) | Grep `references/procedure-index.md` for the task word or identifier, read that entry, then its Depth reference | — | — |
-| New plugin: skeleton, phases, ordering, package layout | `references/framework.md`, `CHEATSHEET.md` | — | `references/animator-generation.md` |
-| Pass that generates animator layers, states or behaviours | `references/animator-generation.md` | `references/framework.md` | — |
-| Attaching VRChat state behaviours, or choosing a destructive output route | `references/animator-generation.md` (Attaching SDK state behaviours; Output routes) | `references/vrchat-avatar-platform.md` (State Behaviour Semantics) | — |
-| Emitting Modular Avatar components, working with Reactive Components, or preview | `references/modular-avatar-integration.md` | `references/framework.md` (Preview system) | — |
-| Parameter validation, parameter conversion | `references/parameters.md` | `references/framework.md` | — |
-| Error reporting, validation severity policy | `references/error-reporting.md` | `references/parameters.md` | — |
-| Declaring parameters, building Expressions Menus, parameter providers | `references/menus-and-parameters.md` | `references/modular-avatar-integration.md` | — |
-| Building a component that adds parameters and menu items (a menu-generator component) | `references/menus-and-parameters.md` (Components that add parameters and menu items) | `references/modular-avatar-integration.md` (Emitting Modular Avatar components) | — |
-| Toggling/moving objects, driving blendshapes, or animating shader (material) properties | `references/manipulation-techniques.md` | `references/modular-avatar-integration.md` (Reactive Components) | — |
-| Assembly layout: asmdef fields, assembly-info, test assemblies | `CHEATSHEET.md` (Assemblies) | — | — |
-| Choosing between the two dependency cases (NDMF only vs NDMF + Modular Avatar) | Design Decisions in this file | `references/framework.md` | — |
-| Reviewing or fixing an existing plugin | The reference for the area touched, plus the NEVER list | `CHEATSHEET.md` | — |
-| Reviewing code written by a Unity developer new to NDMF/MA | `references/anti-patterns.md` | The NEVER list | — |
-| VRChat platform facts behind a design or generation choice (playable layers, built-in parameters, allowed components, PhysBone/Contact/Raycast parameters) | `references/vrchat-avatar-platform.md` | The reference for the area touched | — |
-| Delivering or reviewing a plugin as a VPM package (package.json fields, VCC install routes, Assets migration) | `references/vpm-packaging.md` | `references/framework.md` | — |
-| Avatar Optimizer warns about the plugin's component, or a component must survive until late in the build | `references/avatar-optimizer-compat.md` | `references/framework.md` | — |
-| Build output is wrong and the failing point in the pipeline is unknown, or behaviour differs between a VRChat build / Play mode and a plain build | `references/debugging.md` | `references/framework.md` | — |
 
 ## Design Decisions Before Starting
 
@@ -108,9 +85,13 @@ usually rewrites the pass.
   output route and ordering constraints follow from it. No other
   product is a third case, and none becomes a dependency through this
   skill.
-- **Trigger model.** Generation is build-time and the avatar has no runtime
-  code, so a component's effect must be expressed as animator parameter
-  conditions, MA reactive behaviour, or a static transformation. If a design
+- **Trigger model.** On an uploaded SDK3A avatar no author code runs:
+  neither MonoBehaviours nor custom StateMachineBehaviours execute, so
+  the AnimatorController — driven by parameters and carrying the SDK's
+  own state behaviours — is the only runtime mechanism a product can
+  operate through. Generation is build-time, so a component's effect
+  must be expressed as animator parameter conditions, MA reactive
+  behaviour, or a static transformation. If a design
   seems to need runtime observation, the design is wrong, not the framework.
 - **Output route.** Generate a fresh AnimatorController and merge it, or
   transform what exists through NDMF/MA services. Pick one route per product
@@ -128,6 +109,20 @@ usually rewrites the pass.
   behaviour's own documented fallback: if the behaviour defines a
   fallback for a missing value, warn; if it has none and the missing
   value is used as given, error.
+- **Loose coupling to referenced sets.** What a component references
+  by name is input, not a claim to verify. The build does not fail
+  because a referenced name is absent from the set the build can
+  see: that set is an inventory other passes keep changing, and
+  generation that depends on its current contents breaks when the
+  inventory moves. Mistakes are prevented at input, not detected at
+  build: where the product can detect the candidates it offers them
+  as editor suggestions, and the field stays editable as free text
+  so a name the product cannot detect is still entered and corrected
+  by hand. Applied to parameters: a condition's name is never
+  validated for existence and never skips a component; type
+  resolution still consults the build-time set, the derived names,
+  and the built-in catalogue (Parameters), and a name no source
+  types registers as Float.
 - **Naming in one place.** Package name, plugin QualifiedName, namespaces
   and assembly names are decided once, up front, so a rename touches one
   definition each. QualifiedName defaults to the plugin class's full name;
@@ -154,13 +149,13 @@ Run the steps in order.
    Configure() declaring each pass with its phase and ordering constraints
    (Framework reference; skeleton in the Cheatsheet).
 4. **Write the pass.** Collect target components under the avatar root
-   (including inactive), sanitize their serialized data, validate through
-   ParameterInfo, generate, merge, then remove every found source
-   component instance, success or failure (P-19).
-5. **Generate the animator output** per Animator Generation: one layer per
-   component or setting, idle/active states, condition-gated transitions,
-   the SDK behaviour on the active state, and the merge component
-   (dependency case 2).
+   (including inactive), sanitize their serialized data, resolve their
+   parameter types through ParameterInfo, generate, merge, then remove
+   every found source
+   component instance, success or failure (P-18).
+5. **Generate the animator output** per Animator Generation: the shape
+   chosen per feature (the layer/state pattern, or the Direct Blend Tree
+   shape), and the merge component (dependency case 2).
 6. **Report every author-facing problem through ErrorReport** per Error
    Reporting, with the component as context. No Debug.Log for validation.
 7. **Audit and hand over.** Static checks first: brace balance, JSON
@@ -175,22 +170,6 @@ Run the steps in order.
    with three lists: what was tried but could not be done; what was
    asked but not done; and what was done beyond the ask. State Unity
    import as unconfirmed until the user reports back.
-
-## Terminology
-
-Fixed forms for this skill; keep new or edited text aligned.
-
-| Form | Rule |
-| --- | --- |
-| NDMF | Non-Destructive Modular Framework. Expanded at first use in this file; the references use the short form. |
-| Modular Avatar (MA) | Expanded with the short form at first use in each file, MA afterwards. The joined form (ModularAvatarParameters and similar) appears only in code identifiers and type names, never in prose. |
-| Avatar Optimizer (AAO) | Same expansion rule as MA. |
-| ordering constraint | The only "constraint" of NDMF sequencing: a BeforePlugin / AfterPlugin declaration (Framework). |
-| Unity constraint / VRChat constraint | The constraint components. A bare "constraint" for a component appears only inside the platform reference's constraint sections, where the subject is fixed. A limitation or precondition is a "condition" or a "rule", never a "constraint". |
-| Owner-qualified implementation names | Names shared across ecosystems (Unity built-ins, the VRChat SDK, third-party assets such as FinalIK or the deprecated DynamicBone) are written with their owner or as the type name — VRCRaycast, VRCPhysBone, Unity constraint, VRChat constraint — because the same word names different implementations in each. A bare shared name never names a component outside a section whose subject fixes it. |
-| Expression Parameters / Expressions Menu | VRChat's feature names, always in this form. |
-| behaviour | The prose spelling of this skill. Names taken from a source (type names, page titles, URLs) keep the source spelling. |
-| SDK3A | The VRChat SDK for avatars; this skill's scope. "SDK3" alone appears only where a source uses it (the platform's avatar version value, legacy projects). |
 
 ## Sources
 

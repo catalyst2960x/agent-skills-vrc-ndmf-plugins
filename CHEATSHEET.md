@@ -38,10 +38,10 @@ public class MyPlugin : Plugin<MyPlugin>
 }
 ```
 
-Inside the pass, in order: sanitize the found components; validate
-their parameters against ParameterInfo; generate; merge; then remove
+Inside the pass, in order: sanitize the found components; resolve
+their parameter types through ParameterInfo; generate; merge; then remove
 the component instances — every instance found, including ones that
-failed validation (P-19).
+failed validation (P-18).
 
 ## Phases in order
 
@@ -127,23 +127,21 @@ Declare exactly the case the design chose. The com.vrchat.avatars
 entry is the platform, not a case: it is identical in both cases,
 its version takes the SDK's current Breaking version with x for the
 Bump version, and a package that uses the SDK's public APIs declares
-it (VPM Packaging). Set each framework lower bound from the APIs
-the plugin calls, not from the oldest version it was first written
-against (VPM Packaging).
+it (VPM Packaging).
 
 ## Pass checklist
 
 Run each item through its procedure; the steps and traps live there.
 
 - [ ] P-04 — components collected (inactive included), arrays sanitized
-- [ ] P-05 — parameters indexed and validated; P-07 in place first when
-  the plugin itself generates the parameters being validated
+- [ ] P-05 — parameter types resolved; P-07 in place first when
+  the plugin itself generates the parameters being resolved
 - [ ] P-06 — every defect reported through ErrorReport at the policy
   severity; no Debug.Log
 - [ ] P-08 / P-09 — controller parameters registered; layer and states
   built to the pattern
 - [ ] P-11 (case 2) — merge component added before any source removal;
-  every found instance removed, failed ones included (P-19)
+  every found instance removed, failed ones included (P-18)
 - [ ] Framework (BuildContext) — replaced objects registered with the
   ObjectRegistry when a pass clones or replaces
 

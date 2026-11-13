@@ -2,8 +2,8 @@
 
 Reading and writing the two avatar-level surfaces a plugin shares with
 every other plugin: the Expression Parameters and the Expressions Menu.
-Facts are those of the SDK types, NDMF 1.15.0-beta.5, and Modular
-Avatar (MA) 1.19.0-rc.1.
+Facts are those of the SDK types and the pinned framework versions
+(SKILL.md, Sources).
 
 ## Reading parameters
 
@@ -78,8 +78,10 @@ Avatar (MA) 1.19.0-rc.1.
   validates them against ParameterInfo, but nothing merges them into the
   avatar's Expression Parameters, and nothing stops a name collision with
   a parameter the author uses for something else. Prefix generated names
-  with the product's name, and treat a same-name different-type entry in
-  ParameterInfo as a validation error.
+  with the product's name, and treat a collision between a generated name
+  and a ParameterInfo entry of a different type as a validation error:
+  the plugin is about to rely on that name with its own type. Duplicates
+  among the provided entries themselves are not an error (Parameters).
 - **Naming is a compatibility surface.** Once authors build content on a
   parameter name, renaming it breaks their content. Decide names up front
   (SKILL.md, Naming) and keep them stable across versions.

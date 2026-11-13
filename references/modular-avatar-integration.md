@@ -4,7 +4,7 @@ For products in dependency case 2, where Modular Avatar (MA) is a
 requirement and not merely a merge target. Three distinct kinds of access
 exist: emitting MA components for MA to process, cooperating with MA's
 Reactive Components, and matching MA's editor preview. Modular Avatar
-facts are those of 1.19.0-rc.1.
+facts are those of the pinned version (SKILL.md, Sources).
 
 ## Emitting Modular Avatar components from code
 
