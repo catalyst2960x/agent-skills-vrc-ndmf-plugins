@@ -8,6 +8,33 @@ A plugin in this skill's scope is an editor-only component plus a
 build-time pass that validates against `ParameterInfo`, generates and
 merges animator output, and reports problems through `ErrorReport`.
 
+## Install
+
+With the skills CLI:
+
+```bash
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins
+```
+
+Pin a release by appending its tag:
+
+```bash
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.1
+```
+
+As a Claude Code plugin:
+
+```bash
+claude plugin marketplace add catalyst2960x/agent-skills-vrc-ndmf-plugins
+claude plugin install agent-skills-vrc-ndmf-plugins@agent-skills-vrc-ndmf-plugins
+```
+
+With git:
+
+```bash
+git clone https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins.git
+```
+
 ## Scope
 
 - Unity 2022 LTS, VRChat Avatars SDK (SDK3A), editor-only plugins.
@@ -29,6 +56,8 @@ merges animator output, and reports problems through `ErrorReport`.
   Optimizer compatibility, debugging, anti-patterns, and the procedure
   index (P-01 to P-25).
 - `skill.yaml` — the skill manifest.
+- `.claude-plugin/` — the Claude Code plugin and marketplace
+  manifests.
 
 ## Use
 
