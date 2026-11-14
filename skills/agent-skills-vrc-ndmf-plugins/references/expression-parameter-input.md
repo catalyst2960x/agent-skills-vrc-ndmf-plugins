@@ -7,7 +7,10 @@ field is empty, suggestions derived from components that generate
 parameters, and assignments that write a name into another
 component's field at build time.
 
-The scope is the edit-time side. A name the author enters is
+The scope is the edit-time side. The fields this reference
+describes are part of the component's inspector; how an inspector
+is structured and presented in general is Inspectors and Drawers.
+A name the author enters is
 input and is not validated; that principle is a design decision
 (SKILL.md, Loose coupling to referenced sets) and is not restated
 here.

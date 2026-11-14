@@ -6,20 +6,31 @@ The parameter set validation reads is specified in Parameters.
 
 ## Validation policy
 
+- A plugin never blocks the avatar build. It is non-destructive by
+  construction, so no defect can damage data outside its own
+  output; where a target cannot be identified unambiguously, it
+  writes nothing; and where its own processing fails, it disables
+  itself and leaves nothing written. Every defect therefore
+  degrades to a skipped component or a defined result, and
+  severity has a single role: how prominently the problem appears
+  in the report. A required input that is not set is reported
+  with severity Information, because the configuration may still
+  be in progress. A value that is set but invalid, and a
+  contention with another component, are reported with severity
+  NonFatal. A build stops only from outside the plugin, through
+  the framework or the platform.
 - Validate per component, and keep generating the rest: a defect in one
   component must not take down unrelated components on the same avatar.
-- Parameter names are not validated: a condition naming a parameter absent from the build-time
-  set is not a defect, draws no report, and does not skip the
-  component; the name is generated as entered. Name mistakes are
-  prevented in the editor, by suggestions, not detected here.
+- Parameter names are not validated (SKILL.md, Loose coupling to
+  referenced sets): a condition naming a parameter absent from the
+  build-time set is not a defect, draws no report, and does not
+  skip the component.
 - Inapplicability is not a defect: a directive component whose
   target is unset or absent on this avatar, or whose settings do
   not apply to the avatar's current state, is skipped silently and
   draws no report. Validation reports defects in what the author
   configured, not the absence of something the configuration
   might have applied to.
-- Structural defects are Errors: target object unset, target outside the
-  avatar, no usable payload (for example no non-null clips).
 - Sanitize before validating (P-04): validation, generation and name
   collection all read the sanitized arrays, never the raw ones.
 
@@ -39,8 +50,9 @@ The parameter set validation reads is specified in Parameters.
   as the key and as its own substitution. Title and details both render
   verbatim in the error window.
 - Severity is one of the four ErrorSeverity members: Information,
-  NonFatal, Error, InternalError. There is no Warning member; the
-  generate-anyway case of the validation policy above is NonFatal,
-  and the blocking case is Error. Keep the message specific: name the
+  NonFatal, Error, InternalError. There is no Warning member. The
+  plugin itself assigns only Information and NonFatal (Validation
+  policy); Error and InternalError belong to stops that come from
+  outside the plugin. Keep the message specific: name the
   unmet condition or the missing value, not just that "validation
   failed".

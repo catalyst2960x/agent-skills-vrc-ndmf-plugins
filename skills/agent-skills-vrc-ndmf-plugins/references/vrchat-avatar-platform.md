@@ -195,7 +195,10 @@ SDK state behaviours).
   Parameter order, driven by a synced parameter, makes every player
   hear the same clip. The Parameter order's parameter must be
   defined in the avatar's Expression Parameters; if it cannot be
-  found, the first clip is chosen instead. Adding the behaviour to
+  found, the first clip is chosen instead. The behaviour plays
+  through the AudioSource and does not enable it: an AudioSource
+  whose component is disabled plays nothing, so the source has
+  to be enabled for playback. Adding the behaviour to
   a sub-state machine itself (rather than to states) is not
   recommended.
 

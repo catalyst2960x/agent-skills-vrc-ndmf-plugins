@@ -106,9 +106,9 @@ avatar effects in the editor without a build:
   work.
 - Decide the preview story for every visible effect a product generates
   (SKILL.md, Design Decisions). In order of preference: express the effect
-  as an MA reactive component and inherit MA's preview; generate animator
-  output and accept that preview is the animator's own tooling; or
-  implement an IRenderFilter for the product's component. "No preview" is
+  as an MA reactive component and inherit MA's preview; implement an
+  IRenderFilter for the product's component; or state explicitly that
+  the product has no preview. "No preview" is
   a legitimate choice for non-visual output (audio, parameter driving),
   but it is a choice to state, not a default to fall into.
 - Preview code runs outside the build, repeatedly, on the live scene: it

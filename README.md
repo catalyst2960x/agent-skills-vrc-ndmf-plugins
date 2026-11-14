@@ -19,7 +19,7 @@ npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins
 Pin a release by appending its tag:
 
 ```bash
-npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.1
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.2
 ```
 
 As a Claude Code plugin:
@@ -45,25 +45,28 @@ git clone https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins.git
 
 ## Contents
 
-- `SKILL.md` — the entry point: scope, the NEVER list of prohibitions,
-  design decisions, the core workflow, and the table of contents.
-- `CHEATSHEET.md` — the plugin skeleton, the asmdef assembly tables,
-  and the package.json tables.
-- `references/` — one file per subject: framework, animator generation,
-  reactive tracking, Modular Avatar integration, parameters, expression
-  parameter input, error reporting, Expression Parameters and Expressions Menu, manipulation
+- `skills/agent-skills-vrc-ndmf-plugins/SKILL.md` — the entry point:
+  scope, the NEVER list of prohibitions, design decisions, the core
+  workflow, and the table of contents.
+- `skills/agent-skills-vrc-ndmf-plugins/CHEATSHEET.md` — the plugin
+  skeleton, the asmdef assembly tables, and the package.json tables.
+- `skills/agent-skills-vrc-ndmf-plugins/references/` — one file per
+  subject: framework, animator generation, reactive tracking, Modular Avatar integration, parameters, expression
+  parameter input, inspectors and drawers, error reporting, Expression Parameters and Expressions Menu, manipulation
   techniques, the VRChat avatar platform, VPM packaging, Avatar
   Optimizer compatibility, debugging, anti-patterns, and the procedure
   index (P-01 to P-25).
-- `skill.yaml` — the skill manifest.
+- `skills/agent-skills-vrc-ndmf-plugins/skill.yaml` — the skill
+  manifest.
 - `.claude-plugin/` — the Claude Code plugin and marketplace
   manifests.
 
 ## Use
 
-Load `SKILL.md` into the coding agent before it designs or writes an
-NDMF plugin; the file directs the agent to the reference each task
-needs. The layout follows the agent-skills form used by
+Load `skills/agent-skills-vrc-ndmf-plugins/SKILL.md` into the coding
+agent before it designs or writes an NDMF plugin; the file directs
+the agent to the reference each task needs. The layout follows the
+agent-skills form used by
 [agent-skills-vrc-udon](https://github.com/niaka3dayo/agent-skills-vrc-udon).
 
 ## License

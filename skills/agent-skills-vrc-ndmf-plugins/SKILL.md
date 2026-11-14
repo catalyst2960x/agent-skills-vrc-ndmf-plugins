@@ -44,6 +44,7 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | [Modular Avatar Integration](references/modular-avatar-integration.md) | Emitting MA components, Reactive Components, preview | `references/modular-avatar-integration.md` |
 | [Parameters](references/parameters.md) | The build-time parameter set: ParameterInfo, EffectiveName, conversions between representations | `references/parameters.md` |
 | [Expression Parameter Input](references/expression-parameter-input.md) | Letting the author configure parameters without typing names from scratch: name fields with a resolved-type display, suggestions from the UI parameter view, supplied default names, component-derived suggestions, assignments into other components' fields | `references/expression-parameter-input.md` |
+| [Inspectors and Drawers](references/inspectors-and-drawers.md) | Inspector structure and presentation for plugin components: the edit-time/build-time split, shared list editing and drops, groups and foldouts, one-line element drawers | `references/inspectors-and-drawers.md` |
 | [Error Reporting](references/error-reporting.md) | Reporting through ErrorReport: SimpleError, severities, the validation severity policy | `references/error-reporting.md` |
 | [Expression Parameters and Expressions Menu](references/expression-parameters-and-expressions-menu.md) | Reading/writing Expression Parameters and Expressions Menus, providers, budget | `references/expression-parameters-and-expressions-menu.md` |
 | [Manipulation Techniques](references/manipulation-techniques.md) | Driving objects, blendshapes, and shader parameters: reactive vs manual routes, property bindings | `references/manipulation-techniques.md` |
@@ -105,16 +106,29 @@ usually rewrites the pass.
   route (writing into the descriptor's own controllers) is only for editor
   tooling the author runs on their own project, never for a distributed
   plugin's build pass (NEVER #9).
+- **Surviving other systems.** The merge and optimization systems in
+  the dependency cases legitimately restructure the hierarchy, the
+  layers, and the controllers, and an ordering declaration is a weak
+  constraint: it orders passes, and does not freeze what another
+  system may change. A feature therefore keys on objects and on what
+  curves mean, re-resolved at the point of use, not on a path, a
+  layer position, or an identity captured earlier in the build
+  (Reactive Tracking, R3, applies this to paths).
 - **Preview story.** For every visible effect, decide how the author sees
   it in the editor before building: inherit Modular Avatar's preview by
   expressing the effect as a Reactive Component, write an NDMF preview
   filter (IRenderFilter), or state explicitly that the product has no
   preview (legitimate for non-visual output such as audio).
-- **Error policy.** For each defect decide Error (skip this component,
-  generate the rest) versus NonFatal (generate anyway), from the end
-  behaviour's own documented fallback: if the behaviour defines a
-  fallback for a missing value, warn; if it has none and the missing
-  value is used as given, error.
+- **Error policy.** The plugin never blocks the avatar build: it is
+  non-destructive by construction, writes nothing where a target
+  cannot be identified unambiguously, and disables itself where its
+  own processing fails, so every defect degrades to a skipped
+  component or a defined result. Severity is therefore a visibility
+  choice, not a stopping choice: a required input that is not set is
+  Information; a value that is set but invalid, and a contention
+  with another component, are NonFatal; the plugin assigns no Error.
+  A build stops only from outside the plugin, through the framework
+  or the platform (Error Reporting, Validation policy).
 - **Loose coupling to referenced sets.** What a component references
   by name is input, not a claim to verify. The build does not fail
   because a referenced name is absent from the set the build can

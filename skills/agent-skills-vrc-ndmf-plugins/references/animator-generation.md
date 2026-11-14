@@ -27,11 +27,30 @@ almost nothing.
   may build several layers. Layer name identifies the source (for
   example
   `<product name> [<GameObject name>]`); set the layer's defaultWeight
-  to 1 or the layer silently contributes nothing. Names within one
+  to 1 or the layer silently contributes nothing. Set it where the
+  layer is constructed, or write the layer back: a layer taken from
+  a controller's layers array is a copy (the element is a struct),
+  so assigning defaultWeight on the retrieved value changes nothing
+  in the controller — assign the modified layer back into the
+  array. A consumer that merges controllers normalizes the first
+  layer's weight to 1, which masks the omission in a one-layer
+  controller; a controller with several layers is where it
+  surfaces. Names within one
   generated controller are distinct: when two components would yield
   the same name, the generator makes them distinct by its own
   deterministic rule, assigned in collection order so repeated
   builds produce the same names.
+- Generated clips are named by their role within their container.
+  The layer and state structure already identifies the feature and
+  the object, so the clip's name carries the role: a toggle's two
+  motions by their roles, a clip with no curves as Empty. A clip
+  left unnamed keeps Unity's default name, and every generated
+  clip in the built controller then reads the same. When the same
+  role repeats inside one container, append a discriminator — an
+  index, or the name of the parameter that drives it. When clips
+  for many objects share one container with no per-object
+  structure — a shared layer, a blend tree — the name carries the
+  object as well, because the container no longer supplies it.
 - States: `idle` (the default state), `active`, and optionally an
   intermediate state when a two-stage condition is wanted: the
   intermediate state is entered on a preliminary condition set and
@@ -326,6 +345,12 @@ Decisions).
   (Direct Blend Tree layers) — matching would rewrite it off.
 - Modular Avatar consumes merge components in its own passes, which is why
   the generating pass is ordered before it (Framework reference).
+- The merge carries a controller's curves for the parameters that
+  controller declares; a curve for a parameter the controller does
+  not declare is dropped in the merge. Writing curves into a
+  controller another system owns therefore fails mechanically as
+  well as by rule (NEVER #9) when the parameter is not declared
+  there.
 - Remove the source components only after the merge component exists,
   and remove every found instance, including ones whose generation
   failed (P-21).

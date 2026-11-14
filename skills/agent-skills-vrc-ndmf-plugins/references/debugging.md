@@ -47,3 +47,19 @@ than in a plain NDMF build, check the split VRCSDK pipeline first
 (Framework, VRChat build context): another preprocessor in the
 chain (VRCFury is the common case) may run between the Transforming
 and Optimizing phases, and Play mode goes through the same chain.
+
+## Route the output of a diagnosis
+
+While diagnosing a build, the two output channels have different
+jobs. The build report is a set of claims about the author's
+configuration: every entry spends the reader's attention, and a
+report that lists things that are not problems stops being read,
+so it carries only the defects the product actually claims (Error
+Reporting). Diagnostic detail — traces of what a pass saw and
+did, and records that claim nothing about the configuration —
+goes to the Unity console log instead. This routing is a
+diagnosis-time practice for development, not a reporting policy
+for the shipped product; it is also the boundary of the Debug.Log
+prohibition (SKILL.md NEVER #1), which forbids the log as the
+channel for reporting a build problem to the author, not as a
+diagnostic trace while developing.

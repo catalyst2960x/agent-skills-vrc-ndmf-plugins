@@ -152,7 +152,10 @@ Requires: the error policy decided (SKILL.md, Error policy) and the severity pol
 2. Without a localization asset, use a passthrough Localizer whose single
    lookup maps every key to "{0}", passing the message as its own key.
 3. Report inside using (ErrorReport.WithContextObject(component.gameObject))
-   with ErrorReport.ReportError(error). Severity matches the P-05 policy.
+   with ErrorReport.ReportError(error). Severity per the validation
+   policy (Error Reporting): Information for a required input not
+   set, NonFatal for a set-but-invalid value or a contention; the
+   plugin assigns no Error.
 4. Make the message name the actual defect (the missing names, the unmet
    condition). Never Debug.Log (NEVER #1).
 
@@ -214,13 +217,16 @@ Requires: the trigger model decided (SKILL.md, Trigger model) — idle/active, o
    CloneContext.
 
 ## P-10 Track an object's active state as a parameter
-Keys: reactive tracking, proxy parameter, m_IsActive, AnimationIndex, mirroring pass, active state
+Keys: reactive tracking, proxy parameter, m_IsActive, AnimationIndex, mirroring pass, virtual path, current path, active state
 Case: both · Depth: references/reactive-tracking.md
 Requires: the provider shape decided (Reactive Tracking, Components); the layer that reads the proxy (P-09).
 
 1. During Generating, register every object the layer must follow
-   with the registry, in the registry form the provider chose
-   (Reactive Tracking, Components; The mirroring pass).
+   with the registry: the registry records the object, its proxy
+   name and its build-time default, and registration declares the
+   proxy in every controller held at that point — no path and no
+   binding is recorded (Reactive Tracking, Components; The
+   mirroring pass).
 2. Declare the proxies on the generated controller as animator
    parameters only, and compose the layer's conditions from them:
    a single object's Greater on the forward transition and Less on
@@ -233,8 +239,15 @@ Requires: the provider shape decided (Reactive Tracking, Components); the layer 
    every pass that generates or edits the avatar's animation
    clips, requiring the AnimatorServicesContext (P-03).
 4. In the mirroring pass, mirror each tracked object's
-   m_IsActive curves onto its proxy in the same clips (Reactive
-   Tracking, The mirroring pass).
+   m_IsActive curves onto its proxy in the same clips, per entry:
+   drop an entry whose object was destroyed (fake null), with no
+   report; resolve the object's path from the object through the
+   ObjectPathRemapper as it stands; query the AnimationIndex
+   under the resolved path and, when the virtual-to-real map
+   translates it to a different path, under that path too; in
+   each clip found, read the source curve through the clip's own
+   curve binding and set it on the proxy's Animator binding
+   (Reactive Tracking, The mirroring pass).
 
 ## P-11 Attach an SDK state behaviour and map the fields
 Keys: attach behaviour, StateMachineBehaviour, VRCAnimatorPlayAudio, field mapping, clamp, relative path, SourcePath
@@ -286,8 +299,9 @@ Requires: case 2; parameter names decided once and kept stable; the avatar's exi
    the whole avatar,
    so a declaration is a claim on a scarce resource.
 3. Apply the collision rules (Expression Parameters and Expressions Menu, Writing parameters).
-   Prefix product parameters and treat collisions found through
-   ParameterInfo as validation errors.
+   Prefix product parameters; in this case collisions resolve at
+   merge and are not the plugin's own validation errors — that
+   treatment is case 1's.
 4. Names are a compatibility surface: decide them once, keep them stable.
 
 ## P-14 Build an Expressions Menu
@@ -442,7 +456,9 @@ Requires: the package complete through the procedures it uses; the NEVER list (S
    Name-resolution check: a bare type name that matches one of the
    file's namespace segments (Editor inside a *.Editor namespace)
    resolves to the namespace, not the type; qualify it
-   (UnityEditor.Editor). Signature check: editor-GUI call shapes the
+   (UnityEditor.Editor); and a type name two imported namespaces
+   both provide (AnimatorControllerParameterType in a file that
+   imports UnityEditorInternal) is written fully qualified. Signature check: editor-GUI call shapes the
    code repeats must use overloads verified against the real
    UnityEditor API; PropertyField labels are GUIContent, not string.
 2. Dependency-closure check: every called method and type resolves inside
@@ -454,6 +470,13 @@ Requires: the package complete through the procedures it uses; the NEVER list (S
    reports back.
 5. Real-machine verification is a separate batch; rows not
    yet run stay unconfirmed in the handover.
+6. A verification configuration must be able to exhibit the
+   defect class it stands for. Configurations the platform
+   forces into the working case hide defects: verify generated
+   layers with two or more instances (a merge normalizes the
+   first layer's weight to 1), and verify a feature that
+   follows objects on a target a hierarchy fold actually moves,
+   not only at the avatar root.
 
 ## P-21 Remove generated components before Avatar Optimizer runs
 Keys: Avatar Optimizer, AAO, unknown component, com.anatawa12.avatar-optimizer, ComponentInformation, Asset Description, DestroyImmediate

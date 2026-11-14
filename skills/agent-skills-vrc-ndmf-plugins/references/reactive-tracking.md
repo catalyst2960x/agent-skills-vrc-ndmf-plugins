@@ -30,11 +30,12 @@ The mechanism has four parts.
   object's name, and a sequential index in registration order.
   Registration order is the order consumers visit objects on the
   build clone, so repeated builds of the same avatar assign the
-  same names. How the registry identifies an object, and when its
-  source binding, its default, and its declaration are captured,
-  is one of two forms — binding-keyed or object-keyed — with
-  different costs and risks, stated under "The mirroring pass";
-  the choice belongs to the provider.
+  same names. The registry is keyed by the object itself: it
+  records the object, its proxy name, and its build-time default,
+  and registration declares the proxy in every controller held at
+  that point. It records no path and no binding — a path captured
+  at registration cannot be relied on at mirroring time, for the
+  reason stated under "The mirroring pass".
 - **Proxy.** One Float animator parameter per tracked object,
   declared with the recorded default. A proxy is an animator
   parameter only: it is never declared in Expression Parameters,
@@ -98,11 +99,11 @@ The mechanism holds only under these properties.
 |---|---|---|
 | R1 | Registration completes before the mirroring pass runs; the contract is "register by the end of Generating" | The mirroring pass processes the recorded set once; a later registration has no pass left to mirror it |
 | R2 | The mirroring pass runs in Transforming, after the avatar's animation generation is complete | The pass copies curves that other passes generate; a curve generated after it is never copied |
-| R3 | The mirroring pass finds a tracked object's clips by its source binding, which the registry obtains under one of the two registry forms (The mirroring pass) | When the binding is obtained is the trade-off: captured at registration, it cannot follow a reparenting; resolved at mirroring, it exposes the pass to objects destroyed in between |
+| R3 | The mirroring pass obtains the source binding at mirroring time, resolved from the recorded object; the registry holds no path and no binding | A captured path cannot be relied on across the span between registration and mirroring: the remapper's records are a snapshot from the context's activation, the context can reactivate within a build, and a snapshot taken after a reparenting records the moved path as the original — the captured path then exists in neither the map nor the graph. Resolving from the object at mirroring time is independent of which snapshot is in force; its cost is the liveness test on every entry |
 | R4 | One proxy per object, shared by every consumer that registers the same object | Two proxies for one object diverge as soon as one consumer's registration is missed by a clip |
 | R5 | The proxy is a Float parameter whose default is the object's build-time active state (1 active, 0 inactive) | Before any clip plays, the parameter must already read as the object's current state |
 | R6 | Only mirrored curves write the proxy; the generating plugin's own layers never animate it | A layer writing the proxy fights the mirrored curves, and layer order decides the winner |
-| R7 | Coverage is the set of clips the AnimationIndex enumerates over the VirtualControllerContext's controllers at mirroring time | That set is what the pass can see; clips outside it (for example from a generator ordered after the mirroring pass) are out of scope by construction, not by error |
+| R7 | Coverage is the set of clips the AnimationIndex enumerates over the VirtualControllerContext's controllers at mirroring time | The set is searched under the paths as they stand at mirroring time — the path resolved from the object, and its map translation when the map gives a different one — so a reparented object is reached under the form its clips carry. A clip whose binding names a path that is neither is not reached. Clips outside the set (for example from a generator ordered after the mirroring pass) are out of scope by construction, not by error |
 
 Semantics that follow from the mechanism:
 
@@ -129,67 +130,71 @@ requirement the constraint serves is general: the pass runs after
 every pass that generates or edits the avatar's animation clips.
 
 The pass runs once per build over the registry; an empty registry
-ends it. Both registry forms end in the same copy: for a source
-binding, the pass builds the target binding,
-`EditorCurveBinding.FloatCurve("", typeof(Animator), proxyName)` —
+ends it. For each surviving entry (the registry account below),
+the pass resolves the object's path from the object through the
+ObjectPathRemapper as it stands at that point
+(`GetVirtualPathForObject`), builds the source
+binding — `EditorCurveBinding.FloatCurve(path,
+typeof(GameObject), "m_IsActive")` — and queries the
+AnimationIndex under it. It also queries under the path the
+remapper's virtual-to-real map translates the resolved path to,
+when that differs: that second form covers a snapshot that
+predates a reparenting, where the resolved path is the pre-move
+one and the clips carry the current one. For each clip the index
+returns, the pass reads the clip's float curve through the clip's
+own curve binding for the object and, when one exists, sets that
+same curve on the target binding in the same clip —
+`EditorCurveBinding.FloatCurve("", typeof(Animator), proxyName)`,
 a curve on an Animator-type binding writes the named animator
-parameter — and for each clip the AnimationIndex returns for the
-source binding, it reads the clip's float curve for the source
-binding and, when one exists, sets that same curve on the target
-binding in the same clip. The copy lives in the same clip as the
-original, so the proxy shares the original curve's lifecycle
-exactly: the same states drive it, and Write Defaults applies to
-it the same way.
+parameter. Reading through the clip's own binding finds the curve
+in whatever form the clip stores it. The copy lives in the same
+clip as the original, so the proxy shares the original curve's
+lifecycle exactly: the same states drive it, and Write Defaults
+applies to it the same way.
 
-The registry takes one of two forms, which differ in when the
-source binding is obtained.
+The registry is keyed by the object. Registration — in a pass
+segment where the AnimatorServicesContext is active — records
+the GameObject and its proxy name, reads the build-time
+`activeSelf` as the proxy's default, and declares the proxy in
+every controller the VirtualControllerContext holds, by
+assigning a fully constructed AnimatorControllerParameter into
+each controller's Parameters map (Animator Generation, Merging
+into the avatar, case 1) — declaration is complete at
+registration because a clip that writes an undeclared parameter
+does not drive it, and the object's clips can live in any
+controller.
 
-*Binding-keyed.* Registration captures everything
-GameObject-dependent: in a pass segment where the
-AnimatorServicesContext is active, it resolves the object's
-virtual path through the ObjectPathRemapper to fix the source
-binding (`EditorCurveBinding.FloatCurve(path, typeof(GameObject),
-"m_IsActive")`), records the build-time `activeSelf` as the
-proxy's default, and declares the proxy in every controller the
-VirtualControllerContext holds, by assigning a fully constructed
-AnimatorControllerParameter into each controller's Parameters map
-(Animator Generation, Merging into the avatar, case 1) —
-declaration is complete at registration because a clip that
-writes an undeclared parameter does not drive it, and the
-object's clips can live in any controller. The registry holds
-bindings only, and the pass dereferences no object: a tracked
-object destroyed before mirroring leaves a binding that matches
-fewer clips, or none. A replaced object is followed through the
-remapper — a pass that removes an object calls `ReplaceObject`
-on it first (the remapper's contract), and path handling follows
-the replacement. Costs: registration requires the
-AnimatorServicesContext during Generating, and the recorded
-binding is fixed at registration. Risk: a pass that reparents or
-renames a tracked object, or an ancestor of it, between
-registration and mirroring, and regenerates its clips under the
-new path, leaves the recorded binding matching nothing for those
-clips, and tracking for that object is silently absent.
+At mirroring, each entry is first tested: an entry whose object
+was destroyed before mirroring (Unity's fake null) is dropped —
+no copy, and no report, since an object that no longer exists
+has no activation to follow. The liveness test is load-bearing:
+a pass that omits it dereferences a destroyed object and the
+build fails on that entry, so the mechanism's safety rests on
+the test being present in every implementation. A surviving
+entry's path is resolved from the object at mirroring time, so
+reparenting and renaming of the same object between registration
+and mirroring are followed. An entry does not transfer to a
+different object: a pass that replaces a tracked object leaves
+the entry pointing at the removed object, and tracking does not
+continue onto the replacement.
 
-*Object-keyed.* Registration records the GameObject and its proxy
-name only. For each entry, the pass first tests the object: an
-entry whose object was destroyed before mirroring (Unity's fake
-null) is dropped — no declaration, no copy, and no report, since
-an object that no longer exists has no activation to follow. For
-a surviving entry, the pass resolves the object's virtual path
-through the ObjectPathRemapper, builds the source binding,
-declares the proxy in every controller the VirtualControllerContext
-holds with the object's `activeSelf` as the default, and copies
-as above. A replaced object is followed through the remapper, as
-in the binding-keyed form. Costs: the pass resolves paths and
-declares at mirroring time. Benefit: the binding is obtained at
-mirroring time, so reparenting and renaming between registration
-and mirroring are followed. Risk: the liveness test is
-load-bearing — a pass that omits it dereferences a destroyed
-object and the build fails on that entry, so the form's safety
-rests on the test being present in every implementation.
+The registry records no path because a captured path cannot be
+relied on across the span between registration and mirroring.
+The ObjectPathRemapper's records are a snapshot of the hierarchy
+taken when the AnimatorServicesContext activates, and the
+context can deactivate and reactivate within a build. A snapshot
+taken after a pass has reparented a tracked object — a hierarchy
+fold is the common case — records the moved path as the object's
+original path: the registration-time path then exists in neither
+the remapper's map nor the clips in the graph, which by then
+carry the current path, and no lookup built from the captured
+path reaches them. Resolving the path from the object at
+mirroring time is independent of which snapshot is in force; the
+lookup's second form — the map translation of the resolved
+path — covers the opposite case, a snapshot that predates the
+reparenting.
 
-Independently of the registry form, the mirroring itself has two
-implementation forms. The copy is one; the other is a generated
+The mirroring itself has two implementation forms. The copy is one; the other is a generated
 state machine: instead of writing into the existing
 clips, the provider generates, per tracked object, a layer whose
 states reproduce the states that drive the object's `m_IsActive`.
@@ -208,7 +213,10 @@ same registry.
 Two properties of the framework surface matter here. The
 AnimatorServicesContext is activated per pass segment, so the pass
 receives an index and a path remapper built over the controllers
-as they stand at that point of the build (R2, R7). And
+as they stand at that point of the build (R2, R7) — and the
+remapper is a snapshot from the context's activation, which is
+why paths are resolved from objects at that point rather than
+captured earlier (R3). And
 `GetClipsForBinding` results can change as curves are set, so the
 enumeration is materialized before curves are written into the
 clips. Setting a curve with a null value removes it; the copy is

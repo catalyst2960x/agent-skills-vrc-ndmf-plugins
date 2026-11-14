@@ -26,9 +26,13 @@ interprets — is Expression Parameter Input.
   Animator Generation (Built-in parameters in generated output).
 - Expand the returned entries through `ProvidedParameter.SubParameters()`
   when indexing. An entry in the PhysBones prefix namespace stands for
-  five derived parameters — prefix_IsGrabbed and prefix_IsPosed as Bool,
-  prefix_Angle, prefix_Stretch and prefix_Squish as Float — and only the
-  expansion carries their types; the prefix entry itself reports no type.
+  the derived parameters the platform defines for it (VRChat Avatar
+  Platform, Component-Generated Parameters), and only the expansion
+  carries their names and types; the prefix entry itself reports no
+  type. A Raycast component's Parameter value is likewise a prefix,
+  standing for the derived parameters the platform defines for it
+  (VRChat Avatar Platform, Raycast); a reference to the prefix itself
+  names none of them.
 - The set is a type source, not a gate: a name absent from it is not
   thereby defective, and no report follows from absence.
 - A ProvidedParameter carries its type (`ParameterType`, an
@@ -44,6 +48,16 @@ interprets — is Expression Parameter Input.
   (and pre-conditions when enabled), plus the parameters the product
   defines for its own features. Collect them deduplicated, skipping empty
   names, and register each defined one on the generated controller once.
+- A name the plugin's own generated logic reads to drive its
+  behaviour — a selector the author names, for example — is a
+  stronger dependency than a name a condition references. Where
+  the platform defines what happens when the name is not defined
+  (a selection falls back to a fixed choice), the design decides
+  one of two: the plugin guarantees the definition, declaring the
+  name itself with the type and default its logic assumes and
+  reusing an existing definition of that name; or the requirement
+  and the fallback behaviour are stated as the product's intended
+  behaviour. Silent degradation is a defect, not a third option.
 
 ## Parameter conversions
 

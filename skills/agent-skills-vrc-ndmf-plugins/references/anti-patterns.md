@@ -145,3 +145,13 @@ Breaks: toggles and outfit swaps animate exactly those references; the
 build looks correct until the first such animation plays, then the
 original value returns.
 (Manipulation Techniques, Converting shared assets in a pass)
+
+## 18. Naming a type two imported namespaces both provide
+
+Habit: write `AnimatorControllerParameterType` in an inspector file
+that imports UnityEditorInternal for its lists.
+Breaks: the name exists in both UnityEngine and UnityEditorInternal,
+so the reference is ambiguous and the file fails to compile (CS0104);
+in a project, the inspector and everything drawn with it silently
+disappears. Write the type fully qualified.
+(P-20 step 1)
