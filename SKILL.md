@@ -43,8 +43,9 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | [Reactive Tracking](references/reactive-tracking.md) | Following a GameObject's active state from generated layers: the registry, the proxy parameter, and the mirroring pass that copies m_IsActive curves onto it | `references/reactive-tracking.md` |
 | [Modular Avatar Integration](references/modular-avatar-integration.md) | Emitting MA components, Reactive Components, preview | `references/modular-avatar-integration.md` |
 | [Parameters](references/parameters.md) | The build-time parameter set: ParameterInfo, EffectiveName, conversions between representations | `references/parameters.md` |
+| [Expression Parameter Input](references/expression-parameter-input.md) | Letting the author configure parameters without typing names from scratch: name fields with a resolved-type display, suggestions from the UI parameter view, supplied default names, component-derived suggestions, assignments into other components' fields | `references/expression-parameter-input.md` |
 | [Error Reporting](references/error-reporting.md) | Reporting through ErrorReport: SimpleError, severities, the validation severity policy | `references/error-reporting.md` |
-| [Expression Parameters and Expressions Menu](references/menus-and-parameters.md) | Reading/writing Expression Parameters and Expressions Menus, providers, budget | `references/menus-and-parameters.md` |
+| [Expression Parameters and Expressions Menu](references/expression-parameters-and-expressions-menu.md) | Reading/writing Expression Parameters and Expressions Menus, providers, budget | `references/expression-parameters-and-expressions-menu.md` |
 | [Manipulation Techniques](references/manipulation-techniques.md) | Driving objects, blendshapes, and shader parameters: reactive vs manual routes, property bindings | `references/manipulation-techniques.md` |
 | [Anti-Patterns](references/anti-patterns.md) | Unity habits that break under NDMF/MA, explained as patterns: for reviewing code written without framework knowledge | `references/anti-patterns.md` |
 | [VRChat Avatar Platform](references/vrchat-avatar-platform.md) | VRChat-side facts the generated output must satisfy: playable layers, built-in parameters, behaviour semantics, allowed components, stations, spatial audio, component-generated parameters | `references/vrchat-avatar-platform.md` |
@@ -121,7 +122,7 @@ usually rewrites the pass.
   generation that depends on its current contents breaks when the
   inventory moves. Mistakes are prevented at input, not detected at
   build: where the product can detect the candidates it offers them
-  as editor suggestions, and the field stays editable as free text
+  as editor suggestions (Expression Parameter Input), and the field stays editable as free text
   so a name the product cannot detect is still entered and corrected
   by hand. Applied to parameters: a condition's name is never
   validated for existence and never skips a component; type

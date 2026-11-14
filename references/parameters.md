@@ -3,7 +3,9 @@
 The VRChat avatar parameter set as a plugin sees it at build time: how
 the parameters declared by every source are aggregated into one view,
 and the conversions between the representations of a parameter. How
-defects found against this set are reported is Error Reporting.
+defects found against this set are reported is Error Reporting. The
+edit-time side — how the author enters the names this set later
+interprets — is Expression Parameter Input.
 
 ## Getting the build-time parameter set
 
@@ -15,7 +17,7 @@ defects found against this set are reported is Error Reporting.
   applied. If a name appears more than once, keep the first entry and do not
   treat duplicates as an error. This governs the index used for type
   resolution; a plugin's own generated name colliding with an entry of a
-  different type is a separate case (Menus and Parameters, dependency
+  different type is a separate case (Expression Parameters and Expressions Menu, dependency
   case 1).
 - The set holds declared parameters only. VRChat's built-in parameters
   (IsLocal, GestureLeft, IsAnimatorEnabled, and the rest of the platform

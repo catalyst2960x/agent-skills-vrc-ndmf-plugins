@@ -123,7 +123,7 @@ Requires: P-03 (collection runs inside a pass, against its BuildContext); the ru
 
 ## P-05 Resolve parameter types from the build-time set
 Keys: ParameterInfo, EffectiveName, GetParametersForObject, SubParameters, type resolution, built-in, duplicate, first
-Case: both · Depth: Parameters; Error Reporting (Validation policy)
+Case: both · Depth: Parameters; Error Reporting (Validation policy); Expression Parameter Input (the edit-time fields the names come from)
 Requires: P-04 (sanitized components); if this plugin itself generates the parameters being resolved, P-07 in place first — otherwise they are invisible to ParameterInfo.
 
 1. Build the index: ParameterInfo.ForContext(ctx)
@@ -241,8 +241,11 @@ Keys: attach behaviour, StateMachineBehaviour, VRCAnimatorPlayAudio, field mappi
 Case: both · Depth: Animator Generation (Mapping; Attaching SDK state behaviours)
 Requires: the VRChat SDK present in the project (the behaviour type comes from it); the field mapping and limits verified against SDK-compiling code (NEVER #8); P-09's states, since the behaviour lands on the active state.
 
-1. Create the behaviour, set it on the active state only; it carries both
-   the enter and exit settings.
+1. Create the behaviour by adding its type to the state
+   (AddStateMachineBehaviour) or with ScriptableObject.CreateInstance
+   — never with `new`, whose instance does not survive into the built
+   avatar — and set it on the active state only; it carries both the
+   enter and exit settings.
 2. Convert at generation time: clamp numbers to the behaviour's
    documented limits and swap min/max after clamping; drop null payload
    entries (clips); turn object references into the path the behaviour

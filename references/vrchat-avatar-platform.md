@@ -120,6 +120,18 @@ and unsynced); cross-platform (PC/Quest) sync matches parameters by
 their position in the Expression Parameters list and their type, not
 by name — use the same asset for both platform uploads.
 
+Parameter name form: the platform's own names — every built-in above
+and the aliased defaults VRCEmote and VRCFaceBlendH/V — are single
+concatenated words, with no separator characters and each word
+capitalized. A separator appears only where a component joins the
+name of a value it writes to a prefix ({prefix}_{value};
+Component-Generated Parameters). A name a plugin invents — a proxy
+parameter's prefix, a default supplied for an unset name — follows
+the same form; for a name that becomes an Expression Parameter, a
+`/` also reads as hierarchy in an OSC address. A name the author
+supplies is an input and is never rewritten to fit the form
+(Parameters).
+
 ## Parameter Type Conversion
 
 A parameter carries two types: the source type — the built-in's type
@@ -153,37 +165,39 @@ SDK state behaviours).
 
 | Behaviour | What it does |
 | --- | --- |
-| VRCAvatarParameterDriver | Sets, adds, copies, remaps, or randomizes avatar parameters on state enter/exit |
-| VRCAnimatorPlayAudio | Configures and plays an AudioSource |
-| VRCAnimatorTrackingControl | Switches individual body/element tracking between tracking and animation |
-| VRCAnimatorLayerControl | Blends a playable layer's weight in or out |
-| VRCAnimatorLocomotionControl | Enables or disables locomotion |
-| VRCAnimatorTemporaryPoseSpace | Moves the avatar into a temporary pose space for the state |
-| VRCPlayableLayerControl | Enables or disables a playable layer with a blend duration |
+| Avatar Parameter Driver | Sets, adds, copies, remaps, or randomizes avatar parameters on state enter/exit |
+| Animator Play Audio | Configures and plays an AudioSource |
+| Animator Tracking Control | Switches individual body/element tracking between tracking and animation |
+| Animator Layer Control | Blends a playable layer's weight in or out |
+| Animator Locomotion Control | Enables or disables locomotion |
+| Animator Temporary Pose Space | Moves the avatar into a temporary pose space for the state |
+| Playable Layer Control | Enables or disables a playable layer with a blend duration |
 
 - All state behaviours run on the first frame of the transition into
   their state. Execution is not guaranteed for very short states or
   transitions; a total of at least 0.02 s in and around the state is
   the documented safe floor.
-- Avatar Parameter Driver: operations run once, on state entry, in list
-  order. Values written to synced parameters are clamped to the synced
-  ranges (Int 0–255, Float −1 to 1); parameters that exist only in the
-  controller are not clamped. Built-in parameters (above) cannot be
-  driven at all, and built-ins do not work as a Copy source. Add and
-  Random can diverge between clients — drive a synced destination and
-  run the driver locally (Local Only).
-- Animator Layer Control cannot change layer 0 (always weight 1.0).
-  Exiting a state mid-blend snaps the layer to the goal weight.
-- Temporary Pose Space executes only if its delay elapses before the
-  state is exited; it is for posture-driven viewpoint changes, not for
-  scaling the avatar.
-- Animator Play Audio: if the AudioSource is not found at the first
-  transition into the state, the behaviour is disabled. A blank Source
-  Path means the avatar root. Playback Order Random and Unique Random
-  choose per player; only the Parameter order, driven by a synced
-  parameter, guarantees every player hears the same clip. Adding the
-  behaviour to a sub-state machine itself (rather than to states) is
-  not recommended.
+- Avatar Parameter Driver: operations run once, on state entry, in
+  list order. Synced values are clamped (Int 0–255, Float −1 to 1);
+  controller-only parameters are not clamped. Built-in parameters
+  cannot be driven, and do not work as a Copy source. Add and Random
+  can diverge between clients: use a synced destination and run the
+  driver locally (Local Only).
+- Animator Layer Control: layer 0 cannot be changed (always weight
+  1.0). Exiting a state mid-blend sets the layer to the goal weight
+  at once.
+- Animator Temporary Pose Space: runs only if its delay elapses
+  before the state is exited. For posture-driven viewpoint changes,
+  not for scaling the avatar.
+- Animator Play Audio: a Source Path that names no AudioSource at
+  the first transition disables the behaviour; blank means the
+  avatar root. Random and Unique Random choose per player; the
+  Parameter order, driven by a synced parameter, makes every player
+  hear the same clip. The Parameter order's parameter must be
+  defined in the avatar's Expression Parameters; if it cannot be
+  found, the first clip is chosen instead. Adding the behaviour to
+  a sub-state machine itself (rather than to states) is not
+  recommended.
 
 ## Allowed Avatar Components
 
@@ -222,9 +236,9 @@ Source: https://creators.vrchat.com/avatars/whitelisted-avatar-components/whitel
 
 Source: https://creators.vrchat.com/worlds/components/vrc_station/
 
-VRCStation is documented with the world components, but it is on the
-avatar allowed list and works on avatars: other players sit on the
-wearer.
+The station component (type `VRCStation`) is documented with the
+world components, but it is on the avatar allowed list and works on
+avatars: other players sit on the wearer.
 
 - An avatar may carry up to 6 stations; any beyond that are disabled.
 - A station must be enabled at upload. A station disabled at upload
@@ -273,9 +287,10 @@ wearer.
 
 Source: https://creators.vrchat.com/worlds/components/vrc_spatialaudiosource
 
-VRCSpatialAudioSource adds 3D spatialization to an AudioSource
-(adding the component adds the AudioSource). It works on avatars as
-in worlds, with the limits below, enforced at runtime.
+The spatial audio component (type `VRCSpatialAudioSource`) adds 3D
+spatialization to an AudioSource (adding the component adds the
+AudioSource). It works on avatars as in worlds, with the limits
+below, enforced at runtime.
 
 - An avatar AudioSource without one gets one created by the SDK
   with default settings, which may not match the design — a
@@ -309,7 +324,8 @@ own parameters.
 
 Source: https://creators.vrchat.com/common-components/physbones
 
-A VRCPhysBone whose `Parameter` field is set to a prefix writes:
+A PhysBone component (type `VRCPhysBone`) whose `Parameter` field
+is set to a prefix writes:
 
 | Parameter | Type | Meaning |
 | --- | --- | --- |
@@ -329,7 +345,8 @@ parent.
 
 Source: https://creators.vrchat.com/common-components/contacts/
 
-- A receiver writes its named parameter on contact. Receiver types:
+- A contact receiver (type `VRCContactReceiver`) writes its named
+  parameter on contact. Receiver types:
   Constant (value while any contact is present, resets when none),
   OnEnter (one frame on contact), Proximity (Float 0.0–1.0, closest
   contact wins; Float parameters only).
@@ -347,20 +364,28 @@ Source: https://creators.vrchat.com/common-components/contacts/
 - Local-only contacts do not affect the performance rank; an avatar
   may carry up to 256 contact components when they are local-only.
 
-### VRCRaycast
+### Raycast
 
 Source: https://creators.vrchat.com/avatars/avatar-components/raycast
 
-A VRCRaycast whose `Parameter` field is set writes {prefix}_Hit
-(Bool), {prefix}_Ratio (Float 0.0–1.0 of the configured distance), and
-{prefix}_Distance (Float, world units). At most 80 VRCRaycast
-components per avatar, shared with FinalIK (Allowed Components).
-Maximum ray distance is 1000 units.
+The SDK's raycast component (type `VRCRaycast`) fires a ray and
+moves a result transform to the hit point. With its `Parameter`
+field set to a prefix, it writes three animator parameters:
 
-The name needs its owner: "raycast" also names Unity's Physics.Raycast,
-which is a scripting query and not a component, and no other raycast
-component is on the allowed list. On an avatar, a raycast a plugin can
-generate or reference is always this component.
+- `{prefix}_Hit` (Bool) — the ray is hitting something
+- `{prefix}_Ratio` (Float, 0.0–1.0) — the proportion of the
+  configured distance travelled before the hit
+- `{prefix}_Distance` (Float) — the world distance travelled
+  before the hit
+
+At most 80 per avatar, shared with FinalIK (Allowed Avatar
+Components). The maximum ray distance is 1000 units.
+
+The name needs its owner: "raycast" also names Unity's
+Physics.Raycast, which is a scripting query and not a component,
+and no other raycast component is on the allowed list. On an
+avatar, a raycast a plugin can generate or reference is always
+this component.
 
 ## Synchronization
 
@@ -442,10 +467,11 @@ Source: https://creators.vrchat.com/common-components/constraints/
 
 Source: https://creators.vrchat.com/avatars/avatar-components/vrc-headchop
 
-- VRCHeadChop controls which bones VRChat scales down to keep the head
-  out of the wearer's first-person view. It affects only the wearer's
-  own view — not mirrors, not other players.
-- Limits: at most 16 VRCHeadChop components per avatar (the SDK errors
+- The head chop component (type `VRCHeadChop`) controls which bones
+  VRChat scales down to keep the head out of the wearer's first-person
+  view. It affects only the wearer's own view — not mirrors, not other
+  players.
+- Limits: at most 16 per avatar (the SDK errors
   above that), each listing at most 32 target bones with a per-bone
   scale factor and an apply condition (always, VR only, non-VR only),
   multiplied by one global scale factor.

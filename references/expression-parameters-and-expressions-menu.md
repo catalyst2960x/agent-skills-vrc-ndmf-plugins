@@ -41,7 +41,7 @@ Facts are those of the SDK types and the pinned framework versions
   (internalParameter), which is renamed like the others but never
   registered, for work parameters; and a Prefix entry (isPrefix), where
   one entry configures the whole family of parameters a PhysBone or a
-  VRCRaycast generates from that prefix, and is likewise not registered.
+  Raycast generates from that prefix, and is likewise not registered.
 - **Entry settings beyond the basics.** A synced Int or Float costs its
   bitWidth in network bits (2 to 8, default 8), and its representation
   (Unsigned or Signed) fixes how the value maps onto that width; a

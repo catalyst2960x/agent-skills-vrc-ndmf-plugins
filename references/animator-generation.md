@@ -407,10 +407,14 @@ expose.
 
 ## Attaching SDK state behaviours
 
-- Attach a behaviour by adding the SDK type to the state and setting
-  its fields. The catalogue of behaviours and their platform
-  semantics live in VRChat Avatar Platform (State Behaviour
-  Semantics).
+- Attach a behaviour by adding the SDK type to the state
+  (AnimatorState.AddStateMachineBehaviour) or with
+  ScriptableObject.CreateInstance, and set its fields on the
+  attached instance. A StateMachineBehaviour is a ScriptableObject:
+  an instance created with `new` is not engine-managed and does not
+  survive into the built avatar. The catalogue of behaviours and
+  their platform semantics live in VRChat Avatar Platform (State
+  Behaviour Semantics).
 - A generator sets every field it relies on: defaults differ
   depending on how the behaviour instance was created, and an unset
   field (an apply mode, for example) silently changes the outcome.

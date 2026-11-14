@@ -23,8 +23,8 @@ merges animator output, and reports problems through `ErrorReport`.
 - `CHEATSHEET.md` — the plugin skeleton, the asmdef assembly tables,
   and the package.json tables.
 - `references/` — one file per subject: framework, animator generation,
-  reactive tracking, Modular Avatar integration, parameters, error
-  reporting, Expression Parameters and Expressions Menu, manipulation
+  reactive tracking, Modular Avatar integration, parameters, expression
+  parameter input, error reporting, Expression Parameters and Expressions Menu, manipulation
   techniques, the VRChat avatar platform, VPM packaging, Avatar
   Optimizer compatibility, debugging, anti-patterns, and the procedure
   index (P-01 to P-25).
