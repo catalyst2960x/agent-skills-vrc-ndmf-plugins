@@ -45,6 +45,11 @@ What a complete code-driven emission sets, per component type:
   toggle and a button over
   the same parameter differ only in the control type and value semantics,
   so build both from one description rather than duplicating the wiring.
+- ModularAvatarMenuGroup: a container with no control of its
+  own; the ModularAvatarMenuItems on its child GameObjects are
+  installed into the menu the group itself is installed into.
+  It groups several generated controls under one GameObject
+  without a submenu or a menu asset.
 
 Reading MA state: prefer the framework surfaces over MA internals —
 ParameterInfo (Parameters) for parameters, and the components
@@ -136,3 +141,9 @@ avatar effects in the editor without a build:
     own settings component: locate it through the context, because
     the avatar-root list itself does not change when a component is
     added to an existing root.
+- When a filter's observed state is plain data rather than
+  components — a SerializeReference tree or another data class
+  the filter reads through the context — invalidation works from
+  compared values: give the data exact value equality and a deep
+  Clone(), or an edit that leaves the compared value equal
+  registers as no change and the preview goes stale.

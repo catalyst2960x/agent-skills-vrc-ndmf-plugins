@@ -58,8 +58,8 @@ almost nothing.
   no return to idle. State names are the product's; the roles are
   what the pattern fixes. Generated states set
   writeDefaultValues = false and share one empty Motion (a Direct
-  Blend Tree layer is the exception: VRChat Avatar Platform,
-  Playable Layers).
+  Blend Tree layer is the exception: VRChat Playable
+  Layers, Write Defaults).
 - The empty Motion is a single AnimationClip holding one curve with two
   zero keys (at time 0 and 1/60) on a dummy path; it exists so the states are
   valid without animating anything, and so no state carries a null
@@ -68,6 +68,51 @@ almost nothing.
   real work.
 - The behaviour instance goes on `active` only, and carries both the enter
   and the exit settings; there is no second behaviour for exit.
+
+## Complete clips and default capture
+
+Where several states of one layer are alternatives over the same
+animated properties — several features sharing a layer, a selector
+with many branches — build the layer's clips complete:
+
+1. Compute the union of the bindings any state of the layer may
+   animate, keyed by path, property name, and target type: each
+   feature's shape keys, clip curves, and transform targets.
+2. Capture each member's default from the scene exactly once —
+   the value the built avatar rests at when no state touches it;
+   the first capture wins. A blend shape's default is the
+   renderer's current weight; any other property's default is
+   the animated object's serialized property (Float, Integer, or
+   Boolean), read through a SerializedObject. Transform rotation
+   is the exception stated below.
+3. Every clip of the layer, the default state's included, carries
+   a curve for every member of the union: the state's own value
+   where it specifies one, the captured default everywhere else.
+   A generated curve is constant; a curve that comes from the
+   author's own clip keeps its keys.
+
+Completeness is a property of the layer, not of the feature: the
+two-state pattern above is this rule over one feature's
+properties, and the Direct Blend Tree form states it for a
+sub-tree (Direct Blend Tree layers). Judged over the union, no
+state can leak another state's values, and the layer behaves the
+same with Write Defaults on or off, so its behaviour does not
+depend on the setting the merge leaves it with either.
+
+A binding enters the union only when a state actually changes
+the property. For a transform target, compare the target against
+the transform's current local values per component group —
+position, rotation, scale: a group that already matches produces
+no bindings, so an axis no state changes is animated by no clip
+of the layer and stays free for other systems to drive.
+
+Rotation defaults and targets are kept in the Inspector's Euler
+space (the `localEulerAnglesRaw` properties) throughout. The
+serialized rotation is a quaternion, and the Euler triple
+converted from it need not be the one the Inspector shows, so a
+default or a target taken through the quaternion can rotate the
+bone to an angle the author never saw. Position and scale
+defaults are the current serialized values.
 
 ## Transitions and condition reversal
 
@@ -191,8 +236,8 @@ Build the layer in this order:
    blendParameter set to the driver parameter, and automatic
    thresholds off. Build the layer explicitly: a state machine whose
    only state holds the root as its Motion, with writeDefaultValues
-   = true — the exception to the avatar-wide rule (VRChat Avatar
-   Platform, Playable Layers) — and is set as the state machine's
+   = true — the exception to the avatar-wide rule (VRChat
+   Playable Layers, Write Defaults) — and is set as the state machine's
    default state; and a layer with that state machine, blendingMode
    Override, and defaultWeight 1, added with
    controller.AddLayer(layer).

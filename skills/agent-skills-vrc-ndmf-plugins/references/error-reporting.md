@@ -26,9 +26,10 @@ The parameter set validation reads is specified in Parameters.
   build-time set is not a defect, draws no report, and does not
   skip the component.
 - Inapplicability is not a defect: a directive component whose
-  target is unset or absent on this avatar, or whose settings do
-  not apply to the avatar's current state, is skipped silently and
-  draws no report. Validation reports defects in what the author
+  target — the object or component it points at, not an input of
+  its own — is unset or absent on this avatar, or whose settings
+  do not apply to the avatar's current state, is skipped silently
+  and draws no report. Validation reports defects in what the author
   configured, not the absence of something the configuration
   might have applied to.
 - Sanitize before validating (P-04): validation, generation and name
@@ -48,7 +49,10 @@ The parameter set validation reads is specified in Parameters.
   passthrough Localizer: constructed for one language whose single lookup
   maps every key to the format string "{0}", with the message itself passed
   as the key and as its own substitution. Title and details both render
-  verbatim in the error window.
+  verbatim in the error window. A product that ships PO assets for its
+  inspector uses the same Localizer for its errors (Inspectors and
+  Drawers, Localized labels); the passthrough form is for a product
+  that ships none.
 - Severity is one of the four ErrorSeverity members: Information,
   NonFatal, Error, InternalError. There is no Warning member. The
   plugin itself assigns only Information and NonFatal (Validation

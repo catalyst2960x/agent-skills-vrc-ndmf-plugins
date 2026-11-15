@@ -139,6 +139,29 @@ material, never through the material asset itself:
 | Set a material while active | Reactive: ModularAvatarMaterialSetter, one entry per object (object, material slot index, material) | Slot-level replacement; the rest of the renderer's materials are untouched |
 | Swap materials while active | Reactive: ModularAvatarMaterialSwap, a root object plus from→to material pairs | Every occurrence of the From material under the root is replaced |
 
+The shader side has its own requirements. The property must be
+declared in the shader's Properties: a name with no declaration
+cannot be bound. A `[HideInInspector]` property can be driven —
+visibility and driving are unrelated — and the general form hides
+properties that only tools and clips touch. When a property is not
+driven, its value is the one stored in the material (or the
+Properties default if none is stored). A texture's transform is
+driven through the components of `material.<texture name>_ST`:
+`.x` and `.y` are the scale, `.z` and `.w` the offset. Swapping the
+texture itself is an object-reference curve on `material.<name>`,
+not float curves: it replaces the reference rather than
+interpolating a value.
+
+The binding is per renderer, but a plain property's value is per
+material: two renderers sharing the material show the same value.
+Per-renderer values need the shader to read the property as an
+instanced property — the name declared in Properties and also in
+an instancing buffer (`UNITY_DEFINE_INSTANCED_PROP`), read
+through `UNITY_ACCESS_INSTANCED_PROP`, with the shader compiled
+for instancing (`multi_compile_instancing`). The clip binding is
+unchanged; the values separate per renderer because of how the
+shader reads them.
+
 Two conditions decide whether a generated material animation works at
 all. First, the animated material must be the avatar's own: if the same
 material asset is shared with other objects or other avatars, the

@@ -39,21 +39,24 @@ for adopting a VRChat mechanism whose behaviour is unverified.
 | [Core Workflow](#core-workflow) | The seven steps, in order | This file |
 | [Procedure Index](references/procedure-index.md) | Every build task as a greppable procedure: steps and traps, facts live in the other references | `references/procedure-index.md` |
 | [Framework](references/framework.md) | Plugin, phases, ordering, BuildContext | `references/framework.md` |
-| [Animator Generation](references/animator-generation.md) | Layers, states, transitions, Direct Blend Tree layers, behaviours, merge | `references/animator-generation.md` |
+| [Animator Generation](references/animator-generation.md) | Layers, states, transitions, complete clips and default capture, Direct Blend Tree layers, behaviours, merge | `references/animator-generation.md` |
 | [Reactive Tracking](references/reactive-tracking.md) | Following a GameObject's active state from generated layers: the registry, the proxy parameter, and the mirroring pass that copies m_IsActive curves onto it | `references/reactive-tracking.md` |
 | [Modular Avatar Integration](references/modular-avatar-integration.md) | Emitting MA components, Reactive Components, preview | `references/modular-avatar-integration.md` |
 | [Parameters](references/parameters.md) | The build-time parameter set: ParameterInfo, EffectiveName, conversions between representations | `references/parameters.md` |
 | [Expression Parameter Input](references/expression-parameter-input.md) | Letting the author configure parameters without typing names from scratch: name fields with a resolved-type display, suggestions from the UI parameter view, supplied default names, component-derived suggestions, assignments into other components' fields | `references/expression-parameter-input.md` |
-| [Inspectors and Drawers](references/inspectors-and-drawers.md) | Inspector structure and presentation for plugin components: the edit-time/build-time split, shared list editing and drops, groups and foldouts, one-line element drawers | `references/inspectors-and-drawers.md` |
+| [Inspectors and Drawers](references/inspectors-and-drawers.md) | IMGUI inspector structure and presentation for plugin components: the edit-time/build-time split, shared list editing and drops, groups and foldouts, one-line element drawers, localized labels | `references/inspectors-and-drawers.md` |
 | [Error Reporting](references/error-reporting.md) | Reporting through ErrorReport: SimpleError, severities, the validation severity policy | `references/error-reporting.md` |
 | [Expression Parameters and Expressions Menu](references/expression-parameters-and-expressions-menu.md) | Reading/writing Expression Parameters and Expressions Menus, providers, budget | `references/expression-parameters-and-expressions-menu.md` |
 | [Manipulation Techniques](references/manipulation-techniques.md) | Driving objects, blendshapes, and shader parameters: reactive vs manual routes, property bindings | `references/manipulation-techniques.md` |
 | [Anti-Patterns](references/anti-patterns.md) | Unity habits that break under NDMF/MA, explained as patterns: for reviewing code written without framework knowledge | `references/anti-patterns.md` |
-| [VRChat Avatar Platform](references/vrchat-avatar-platform.md) | VRChat-side facts the generated output must satisfy: playable layers, built-in parameters, behaviour semantics, allowed components, stations, spatial audio, component-generated parameters | `references/vrchat-avatar-platform.md` |
+| [VRChat Avatar Platform](references/vrchat-avatar-platform.md) | VRChat-side facts the generated output must satisfy: built-in parameters, behaviour semantics, allowed components, stations, spatial audio, component-generated parameters, contacts | `references/vrchat-avatar-platform.md` |
+| [VRChat Material Contact](references/vrchat-material-contact.md) | The four paths connecting VRC Contacts, VRC Material Contact, the Animator, and shaders: the path model, reading the contact buffers, the three name bindings, the directions with no path | `references/vrchat-material-contact.md` |
+| [VRChat Playable Layers](references/vrchat-playable-layers.md) | The five playable layers and the Avatar Masks that gate them: compositing order, the transform-only layers, the first-layer mask applied to a whole controller, the material-slot and root-transform limits a mask imposes | `references/vrchat-playable-layers.md` |
 | [VPM Packaging](references/vpm-packaging.md) | VRChat-side requirements for delivering a plugin as a VPM package: manifest fields, dependency ranges, legacy migration from Assets, user-package testing | `references/vpm-packaging.md` |
 | [Avatar Optimizer Compatibility](references/avatar-optimizer-compat.md) | Keeping a plugin's components from triggering AAO's unknown-component warning: remove before AAO, or register with its API | `references/avatar-optimizer-compat.md` |
 | [Debugging](references/debugging.md) | Finding where a build goes wrong: inspecting a manual build's output, the single-step build debugger, ordering diagnosis | `references/debugging.md` |
 | [Cheatsheet](CHEATSHEET.md) | Skeleton, asmdef and package tables | `CHEATSHEET.md` |
+| [Templates](templates/README.md) | Worked sample code for mechanisms the references state as rules | `templates/` |
 
 ## Common Mistakes (NEVER List)
 

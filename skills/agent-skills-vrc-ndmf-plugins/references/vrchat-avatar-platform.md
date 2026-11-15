@@ -16,7 +16,6 @@ it.
 
 ## Table of Contents
 
-- [Playable Layers](#playable-layers)
 - [Built-in Animator Parameters](#built-in-animator-parameters)
 - [Parameter Type Conversion](#parameter-type-conversion)
 - [State Behaviour Semantics](#state-behaviour-semantics)
@@ -24,50 +23,11 @@ it.
 - [Stations](#stations)
 - [Spatial Audio](#spatial-audio)
 - [Component-Generated Parameters](#component-generated-parameters)
+- [Contacts](#contacts)
 - [Synchronization](#synchronization)
 - [Constraints](#constraints)
 - [Head Chop](#head-chop)
 - [See Also](#see-also)
-
-## Playable Layers
-
-Source: https://creators.vrchat.com/avatars/playable-layers
-
-- Humanoid avatars have five playable layers, applied in this order:
-  Base, Additive, Gesture, Action, FX. Generic avatars have three:
-  Base, Action, FX. Later layers take precedence over earlier ones for
-  the same property.
-- Only AnimatorControllers are supported in playable layer slots, and
-  the same controller must never be assigned to more than one slot.
-- Base, Additive, Gesture and Action are for transform animation only:
-  on those layers, non-transform animation (materials, blendshapes,
-  GameObject and component toggles) is not copied to the mirror clone
-  and does not survive. Everything that is not a humanoid transform or
-  muscle animation belongs in FX. This is why generated effect output
-  targets FX (Animator Generation, Merging).
-- Additive is always additive blending. Its first layer's Avatar Mask
-  is ignored.
-- Action is blended to weight 0 by default: blend it up with the
-  Playable Layer Control behaviour before the action, and back to 0
-  afterwards.
-- The first FX layer's mask defaults to disabling all humanoid muscles
-  while enabling GameObject animation; animating transforms in FX is
-  not recommended.
-- When VRChat composites the playable layers into one Animator, each
-  controller's first-layer Avatar Mask is applied to that whole
-  controller. A hands-only mask of the kind the Gesture samples carry
-  therefore voids an FX controller's transform and GameObject
-  animation if it ends up on FX's first layer; generated FX output
-  leaves the first layer's mask alone.
-- Write Defaults: within one controller, all states must share one
-  setting — a mix makes the whole controller's behaviour unstable.
-  VRChat's position is that the setting be uniform across the avatar,
-  and the default playable layers are built with it off; a product
-  that needs it on must expect every playable layer replaced. One
-  exception: a layer whose single state holds a Direct Blend Tree.
-  That technique depends on Write Defaults being on, so such a layer
-  is set on regardless of the avatar-wide setting, and it does not
-  destabilize the surrounding off layers.
 
 ## Built-in Animator Parameters
 
@@ -165,18 +125,28 @@ SDK state behaviours).
 
 | Behaviour | What it does |
 | --- | --- |
-| Avatar Parameter Driver | Sets, adds, copies, remaps, or randomizes avatar parameters on state enter/exit |
+| Avatar Parameter Driver | Sets, adds, copies, remaps, or randomizes avatar parameters on state entry |
 | Animator Play Audio | Configures and plays an AudioSource |
 | Animator Tracking Control | Switches individual body/element tracking between tracking and animation |
-| Animator Layer Control | Blends a playable layer's weight in or out |
+| Animator Layer Control | Blends the weight of one Animator Layer inside a playable layer |
 | Animator Locomotion Control | Enables or disables locomotion |
 | Animator Temporary Pose Space | Moves the avatar into a temporary pose space for the state |
-| Playable Layer Control | Enables or disables a playable layer with a blend duration |
+| Playable Layer Control | Blends the weight of an entire playable layer |
 
 - All state behaviours run on the first frame of the transition into
   their state. Execution is not guaranteed for very short states or
   transitions; a total of at least 0.02 s in and around the state is
   the documented safe floor.
+- What a behaviour sets stays set: the layer weight from
+  Animator Layer Control or Playable Layer Control,
+  locomotion enabled or disabled, the tracking
+  assignment, and the pose space remain after the state
+  is exited, until another state runs the same behaviour
+  and changes them. Nothing restores the previous value
+  on exit by itself.
+- Every state behaviour carries a Debug String field;
+  when the behaviour runs, the string is printed to the
+  output log.
 - Avatar Parameter Driver: operations run once, on state entry, in
   list order. Synced values are clamped (Int 0–255, Float −1 to 1);
   controller-only parameters are not clamped. Built-in parameters
@@ -186,6 +156,19 @@ SDK state behaviours).
 - Animator Layer Control: layer 0 cannot be changed (always weight
   1.0). Exiting a state mid-blend sets the layer to the goal weight
   at once.
+- Animator Tracking Control: each body part is set to
+  Tracking (the part follows IK, or simulation for the
+  eyes and eyelids, or visemes for the mouth and jaw),
+  Animation (the part follows the animator), or No
+  Change. Setting Eyes & Eyelid to Animation disables
+  eye movement and eyelid blinking; setting Mouth and
+  Jaw to Animation disables visemes, and the viseme
+  parameters stop being updated. When every IK tracking
+  point is set to Animation, the animation plays as it
+  is instead of through Networked IK; the points are
+  Head, Left Hand, and Right Hand on desktop and 3-point
+  tracking, and those plus Hip, Left Foot, and Right
+  Foot under 6-point and full-body tracking.
 - Animator Temporary Pose Space: runs only if its delay elapses
   before the state is exited. For posture-driven viewpoint changes,
   not for scaling the avatar.
@@ -352,9 +335,13 @@ Source: https://creators.vrchat.com/common-components/contacts/
   parameter on contact. Receiver types:
   Constant (value while any contact is present, resets when none),
   OnEnter (one frame on contact), Proximity (Float 0.0–1.0, closest
-  contact wins; Float parameters only).
+  contact wins; Float parameters only). Constant and OnEnter suit
+  Bool parameters; with a Float or Int parameter, detection writes
+  1. OnEnter can take a Min Velocity.
 - The parameter does not need to be in the synced Expression
   Parameters list.
+- A Receiver can also serve shaders through Write to Shaders,
+  instead of or besides writing its parameter (Contacts).
 - Advanced options generate derived parameters from the same base
   name: {parameter}_SenderType (Int: 0 none, 1 same avatar, 2 other
   avatar, 3 world, 4 item), {parameter}_SenderLocalPositionX/Y/Z,
@@ -389,6 +376,40 @@ Physics.Raycast, which is a scripting query and not a component,
 and no other raycast component is on the allowed list. On an
 avatar, a raycast a plugin can generate or reference is always
 this component.
+
+## Contacts
+
+Source: https://creators.vrchat.com/common-components/contacts/
+(the buffer layout rests on the SDK header `VRCContacts.cginc`)
+
+Contact Receivers also write animator parameters
+(Component-Generated Parameters, Contact Receivers). The other
+output is Write to Shaders (Material Contacts):
+
+- With Write to Shaders enabled — the Receiver Type is
+  Proximity — the Receiver updates the MaterialPropertyBlock of
+  its target renderers every frame.
+- One Receiver updates at most 4 renderers; for more, split the
+  same configuration across several Receivers.
+- The buffer name is the Receiver's Parameter, or the Shader
+  Parameter Override when one is set. Setting the Override and
+  leaving Parameter empty keeps the Receiver off the parameter
+  path and dedicated to shaders.
+- Two buffers arrive, each with 9 elements. The transforms
+  buffer holds the world transforms of the shapes of the 8
+  nearest Senders, with the Receiver's own root transform (the
+  root, not the shape) in the last element. The data buffer
+  packs each target's owner and matched tags: x is the owner's
+  player ID, y is the tag bits, and the last element's y is the
+  target count.
+- The tag bits arrive only when contact tag writing is also
+  enabled on the Receiver; transforms alone do not need it.
+- Distinguishing the wearer from others on the shader side
+  takes separate Receivers — Allow Self only and Allow Others
+  only — with separate buffer names.
+
+How a shader declares and reads the buffers is VRChat
+Material Contact (Path 2).
 
 ## Synchronization
 
