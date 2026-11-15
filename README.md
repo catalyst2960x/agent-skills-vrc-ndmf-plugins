@@ -19,7 +19,7 @@ npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins
 Pin a release by appending its tag:
 
 ```bash
-npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.2
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.3
 ```
 
 As a Claude Code plugin:
