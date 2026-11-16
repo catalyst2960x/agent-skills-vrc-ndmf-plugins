@@ -1,10 +1,11 @@
 # agent-skills-vrc-ndmf-plugins
 
-An agent skill for building VRChat avatar plugins on NDMF (Non-Destructive
-Modular Framework): instructions, procedures, and references that an AI
-coding assistant loads before designing or writing a plugin.
+A collection of agent skills for building VRChat avatar plugins on
+NDMF (Non-Destructive Modular Framework): instructions, procedures,
+and references that an AI coding assistant loads before designing
+or writing a plugin, and before writing or extending its tests.
 
-A plugin in this skill's scope is an editor-only component plus a
+A plugin in these skills' scope is an editor-only component plus a
 build-time pass that validates against `ParameterInfo`, generates and
 merges animator output, and reports problems through `ErrorReport`.
 
@@ -19,7 +20,7 @@ npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins
 Pin a release by appending its tag:
 
 ```bash
-npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.3
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.4
 ```
 
 As a Claude Code plugin:
@@ -35,6 +36,40 @@ With git:
 git clone https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins.git
 ```
 
+## Skills
+
+### agent-skills-vrc-ndmf-plugins
+
+Building NDMF plugins: passes that generate animator controllers,
+parameters and menus, and package the result for VPM.
+
+| Area | Content |
+|------|---------|
+| **Framework** | Pass phases and ordering, build contexts, extension contexts, the two dependency cases (NDMF only, NDMF + Modular Avatar) |
+| **Animator generation** | Controllers, layers, transitions and blend trees generated in code, state behaviours, merging into the avatar's playable layers |
+| **Reactive tracking** | Following a GameObject's active state from generated layers through a mirrored proxy parameter |
+| **Parameters** | Parameter type resolution, supplying and declaring parameters, expression parameter input with suggestions |
+| **Menus** | Building Expressions Menus and menu items through Modular Avatar components |
+| **Inspectors and drawers** | IMGUI inspectors, shared presentation across plugins, localized labels |
+| **Error reporting** | The severity policy: a plugin never blocks the build; Information, NonFatal, and no Error |
+| **Platform** | The VRChat avatar platform: playable layers, VRC Contacts and Material Contacts, Avatar Optimizer compatibility |
+| **Packaging** | The VPM package layout and distribution |
+| **Templates** | 24 worked samples of the mechanisms the references state as rules |
+
+### agent-skills-vrc-ndmf-unit-tests
+
+Unit testing the plugins the first skill builds: NUnit editor tests
+that assert on generated animator controllers, parameters, and
+build reports.
+
+| Area | Content |
+|------|---------|
+| **Test base** | Tracked cleanup, the minimal avatar fixture, the two build entries, error capture, FX inspection |
+| **Case catalogue** | 70 cases in 14 categories: base verification, component processing, generated output, parameter supply, error reporting, ordering and interoperation, non-destructiveness, preview, platform variants, mesh and hierarchy, menus, editor operations, pure logic |
+| **Procedures** | T-01 to T-10: setting up, selecting and writing cases, verifying a case, regression, running the suite in Unity, triage, and close-out |
+| **Failure triage** | Reading a failing case: base first, then the pass and pipeline bisection, then product against dependency |
+| **Templates** | 17 worked samples, one per case area, with document-local stand-ins whose contracts are stated |
+
 ## Scope
 
 - Unity 2022 LTS, VRChat Avatars SDK (SDK3A), editor-only plugins.
@@ -43,29 +78,12 @@ git clone https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins.git
   (2) NDMF + Modular Avatar.
 - Out of scope: VRChat worlds and Udon, and shader work.
 
-## Contents
-
-- `skills/agent-skills-vrc-ndmf-plugins/SKILL.md` — the entry point:
-  scope, the NEVER list of prohibitions, design decisions, the core
-  workflow, and the table of contents.
-- `skills/agent-skills-vrc-ndmf-plugins/CHEATSHEET.md` — the plugin
-  skeleton, the asmdef assembly tables, and the package.json tables.
-- `skills/agent-skills-vrc-ndmf-plugins/references/` — one file per
-  subject: framework, animator generation, reactive tracking, Modular Avatar integration, parameters, expression
-  parameter input, inspectors and drawers, error reporting, Expression Parameters and Expressions Menu, manipulation
-  techniques, the VRChat avatar platform, VPM packaging, Avatar
-  Optimizer compatibility, debugging, anti-patterns, and the procedure
-  index (P-01 to P-25).
-- `skills/agent-skills-vrc-ndmf-plugins/skill.yaml` — the skill
-  manifest.
-- `.claude-plugin/` — the Claude Code plugin and marketplace
-  manifests.
-
 ## Use
 
 Load `skills/agent-skills-vrc-ndmf-plugins/SKILL.md` into the coding
 agent before it designs or writes an NDMF plugin; the file directs
-the agent to the reference each task needs. The layout follows the
+the agent to the reference each task needs. Load the unit-tests
+skill before writing or extending a plugin's tests. The layout follows the
 agent-skills form used by
 [agent-skills-vrc-udon](https://github.com/niaka3dayo/agent-skills-vrc-udon).
 

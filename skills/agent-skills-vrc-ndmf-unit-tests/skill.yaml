@@ -1,0 +1,5 @@
+name: agent-skills-vrc-ndmf-unit-tests
+title: NDMF Plugin Unit Tests
+description: "Unit testing VRChat avatar plugins built with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): NUnit editor tests that assert on generated animator controllers, parameters, and build reports, with a test base, representative cases, and a case catalogue."
+category: Creation
+include_in_prompt: false

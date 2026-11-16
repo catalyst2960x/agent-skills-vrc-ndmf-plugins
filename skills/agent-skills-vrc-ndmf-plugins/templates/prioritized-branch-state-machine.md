@@ -54,13 +54,14 @@ void BuildBranches(AnimatorStateMachine root, IReadOnlyList<Branch> branches)
         // conditions stops holding.
         foreach (var condition in branch.EnterConditions)
         {
-            var exitOne = branch.Machine.AddStateMachineExitTransition();
-            exitOne.AddCondition(Inverse(condition), condition.Threshold,
-                                 condition.Parameter);
+            var exitOne = root.AddStateMachineExitTransition(branch.Machine);
+            var inverse = Inverse(condition);
+            exitOne.AddCondition(inverse.Mode, inverse.Threshold,
+                                 inverse.Parameter);
         }
         for (var higher = 0; higher < i; higher++)
         {
-            var exitToHigher = branch.Machine.AddStateMachineExitTransition();
+            var exitToHigher = root.AddStateMachineExitTransition(branch.Machine);
             foreach (var condition in branches[higher].EnterConditions)
                 exitToHigher.AddCondition(condition.Mode, condition.Threshold,
                                           condition.Parameter);
@@ -74,7 +75,11 @@ the conditions within one transition are ANDed — a higher
 branch's exit transition therefore carries that branch's whole
 enter set, while the branch's own exit is one transition per
 condition. The inverse of a condition swaps its mode (If↔IfNot,
-Greater↔Less, Equals↔NotEqual) and keeps the threshold.
+Greater↔Less, Equals↔NotEqual). The threshold is kept for a
+Float parameter — at exactly the threshold neither side fires —
+and shifts by one for an Int parameter, so the boundary value
+satisfies exactly one side: Greater t inverts to Less t + 1,
+Less t to Greater t − 1.
 
 The state-side half of the wiring — every state inside a branch
 exits back to the root, so priority is re-evaluated there:

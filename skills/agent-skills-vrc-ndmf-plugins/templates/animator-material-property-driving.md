@@ -61,6 +61,12 @@ var clip = new AnimationClip();
 var binding = EditorCurveBinding.FloatCurve(
     "Body", typeof(SkinnedMeshRenderer), "material._MainTex_ST.z");
 AnimationUtility.SetEditorCurve(clip, binding, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+
+// A generated clip plays once and holds its last frame; a
+// scroll repeats only when the clip is set to loop.
+var settings = AnimationUtility.GetAnimationClipSettings(clip);
+settings.loopTime = true;
+AnimationUtility.SetAnimationClipSettings(clip, settings);
 ```
 
 Per-renderer values — declare the same name in Properties

@@ -388,6 +388,13 @@ Decisions).
   pattern, whose states are built to that convention, and false for a
   Direct Blend Tree layer, whose state must keep Write Defaults on
   (Direct Blend Tree layers) — matching would rewrite it off.
+- The merge component's path mode decides what the clips' paths are
+  relative to. The default, Relative, re-roots the paths under the
+  merge component's own GameObject. A generator whose clips carry
+  avatar-relative paths and whose merge component sits below the
+  avatar root — on the generating component's own GameObject, for
+  example — sets pathMode to Absolute. At the avatar root the two
+  modes coincide, which is why the setting never surfaces there.
 - Modular Avatar consumes merge components in its own passes, which is why
   the generating pass is ordered before it (Framework reference).
 - The merge carries a controller's curves for the parameters that

@@ -91,10 +91,3 @@ a small type switch, and none of them justifies a dependency):
 - A controller's existing parameters, read back as expression-parameter
   entries, when a pass must reconcile what it generates with what the
   avatar's controllers already declare.
-- The parameters a PhysBone or a Contact Receiver provides, which exist
-  without any Expression Parameters entry; a name lookup that only reads
-  declared parameters misses them, which is exactly what ParameterInfo
-  aggregates.
-- Filters over provided parameters that recur in validation: deduplicate
-  by name (first entry wins), drop empty names, and drop entries that are
-  not visible to the avatar being built.

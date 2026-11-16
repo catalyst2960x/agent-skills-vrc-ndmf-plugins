@@ -15,8 +15,9 @@ transition per option, independent of which state is current.
   every item. An option an item does not specify falls back to
   zero for that item, or to a null material for a material item,
   so every clip writes every item.
-- One state per option, plus an idle state carrying option 0's
-  clip. All states have Write Defaults off.
+- One state per option; option 0's state is the machine's
+  default state and carries the idle role. All states have
+  Write Defaults off.
 - AnyState transitions on parameter equality, one per option,
   never to the state the machine is already in (no
   self-transition), with the menu's transition duration as the

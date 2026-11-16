@@ -21,7 +21,19 @@ copies the object's `m_IsActive` animation curves onto the proxy.
   default (the object's active state at build time). It does not
   record a path or a binding.
 - At registration, the proxy is declared on every virtual
-  controller (so merges keep it) and on the generated controller.
+  controller the context holds, so merges keep it. The plugin's
+  own generated controller declares it as part of its
+  construction, like every parameter its transitions reference.
+- Registration also records, per generated component, the
+  component's object, its source's object where the design has
+  one, and the generated layer's name. Chain membership is
+  completed at the head of the tracking pass: the chains are
+  recomputed from the hierarchy as it stands there,
+  unregistered members are registered through the same route,
+  and the layer's chain-derived transitions are rebuilt from
+  the recomputed chains. A member that left a chain keeps its
+  proxy but leaves the conditions. Reparents in the
+  Optimizing phase are out of scope.
 - The tracking pass runs after the merging systems. For each
   registered object it resolves the object's path at copy time
   from the remapper, also consults the remapper's path translation
@@ -38,7 +50,18 @@ copies the object's `m_IsActive` animation curves onto the proxy.
 class TrackingState
 {
     public readonly Dictionary<GameObject, string> Proxies = new Dictionary<GameObject, string>();
+    public readonly List<ConsumerRecord> Consumers = new List<ConsumerRecord>();
     public int NextIndex;
+}
+
+// Per generated component: the objects its chains are computed
+// from, and the layer it generated — recorded at registration,
+// consumed by the chain completion in the tracking pass.
+class ConsumerRecord
+{
+    public GameObject Component;
+    public GameObject Source;
+    public string LayerName;
 }
 
 // Generating: register one proxy per object in a chain (the target
@@ -75,9 +98,16 @@ List<KeyValuePair<string, float>> RegisterChain(
 void TrackingPass(BuildContext ctx)
 {
     var state = ctx.GetState<TrackingState>();
+    var services = ctx.Extension<AnimatorServicesContext>();
+
+    // Chain completion first, before any curve is copied: the
+    // chains are recomputed from the hierarchy as it stands,
+    // unregistered members are registered, and each layer's
+    // chain-derived transitions are rebuilt from them.
+    foreach (var consumer in state.Consumers)
+        CompleteChains(consumer, state, services);
     if (state.Proxies.Count == 0) return;
 
-    var services = ctx.Extension<AnimatorServicesContext>();
     var index = services.AnimationIndex;
     var remapper = services.ObjectPathRemapper;
     var realPaths = remapper.GetVirtualToRealPathMap();
@@ -108,6 +138,22 @@ void TrackingPass(BuildContext ctx)
                 clip.SetFloatCurve(parameterBinding, curve);
         }
     }
+}
+
+// The completion for one consumer: register whatever its
+// current chains add, then rebuild the layer's chain-derived
+// transitions — the forward transition carries every own-chain
+// proxy, the returns are one per own-chain proxy, and the
+// source-gated transition, where the design has one, carries
+// every source-chain proxy. Transitions that do not derive
+// from the chains stay as generated.
+void CompleteChains(ConsumerRecord consumer, TrackingState state, AnimatorServicesContext services)
+{
+    var own = RegisterChain(ChainOf(consumer.Component), state, services);
+    var source = consumer.Source != null
+        ? RegisterChain(ChainOf(consumer.Source), state, services)
+        : null;
+    RebuildChainTransitions(consumer.LayerName, own, source);
 }
 
 static AnimationCurve FindSourceCurve(VirtualClip clip, string path, string altPath, EditorCurveBinding source)

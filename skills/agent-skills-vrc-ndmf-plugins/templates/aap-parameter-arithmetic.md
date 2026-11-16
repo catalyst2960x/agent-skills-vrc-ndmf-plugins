@@ -133,9 +133,22 @@ int _deltaSeq;
 const string OneParameter = "One"; // declared Float, default 1
 
 // An input or output: a parameter and the range the 1D trees
-// interpolate over.
-record AAPParameter(string Parameter, float Min, float Max)
+// interpolate over. A plain struct, not a record: a positional
+// record does not compile in a Unity 2022.3 Editor assembly
+// without an IsExternalInit polyfill.
+readonly struct AAPParameter
 {
+    public AAPParameter(string parameter, float min, float max)
+    {
+        Parameter = parameter;
+        Min = min;
+        Max = max;
+    }
+
+    public string Parameter { get; }
+    public float Min { get; }
+    public float Max { get; }
+
     public override string ToString() => Parameter;
 }
 

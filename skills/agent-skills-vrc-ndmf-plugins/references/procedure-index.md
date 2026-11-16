@@ -225,7 +225,9 @@ Requires: the provider shape decided (Reactive Tracking, Components); the layer 
    with the registry: the registry records the object, its proxy
    name and its build-time default, and registration declares the
    proxy in every controller held at that point — no path and no
-   binding is recorded (Reactive Tracking, Components; The
+   binding is recorded. Registration also records, per consumer,
+   the objects its chains are computed from and the name of the
+   layer it generated (Reactive Tracking, Components; The
    mirroring pass).
 2. Declare the proxies on the generated controller as animator
    parameters only, and compose the layer's conditions from them:
@@ -238,7 +240,15 @@ Requires: the provider shape decided (Reactive Tracking, Components); the layer 
 3. Register the mirroring pass in Transforming, ordered after
    every pass that generates or edits the avatar's animation
    clips, requiring the AnimatorServicesContext (P-03).
-4. In the mirroring pass, mirror each tracked object's
+4. At the head of the mirroring pass, complete the chains before
+   copying any curve: recompute each consumer's chains from the
+   hierarchy as it stands, register members the registry does
+   not yet hold through the same route, and rebuild each
+   generated layer's chain-derived transitions from the
+   recomputed chains; transitions that do not derive from the
+   chains stay as generated (Reactive Tracking, R8; The
+   mirroring pass).
+5. In the mirroring pass, mirror each tracked object's
    m_IsActive curves onto its proxy in the same clips, per entry:
    drop an entry whose object was destroyed (fake null), with no
    report; resolve the object's path from the object through the
@@ -316,7 +326,11 @@ Requires: case 2; the parameters the controls bind already declared (P-13) or su
    nesting into a specific existing menu (empty = root menu).
 3. Hierarchy route: one GameObject per control with a
    ModularAvatarMenuItem; set its MenuSource (child items, a referenced
-   asset, or another object's children). An item whose parameter is
+   asset, or another object's children). The hierarchy is visited
+   through an installer: where the avatar has none, place a
+   ModularAvatarMenuInstaller with no menuToAppend on the hierarchy's
+   root GameObject — with no installer anywhere, the items are never
+   visited. An item whose parameter is
    declared nowhere relies on MA's automatic creation: set isSynced,
    isSaved, isDefault, and automaticValue deliberately, or declare the
    parameter in P-13 instead.

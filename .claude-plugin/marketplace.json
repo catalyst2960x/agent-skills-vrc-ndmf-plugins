@@ -1,11 +1,17 @@
 {
   "name": "agent-skills-vrc-ndmf-plugins",
-  "owner": { "name": "ArialNova" },
+  "owner": {
+    "name": "ArialNova"
+  },
   "plugins": [
     {
       "name": "agent-skills-vrc-ndmf-plugins",
       "source": "./",
-      "description": "VRChat avatar plugin development with NDMF and Modular Avatar."
+      "description": "VRChat avatar plugin development with NDMF and Modular Avatar.",
+      "skills": [
+        "./skills/agent-skills-vrc-ndmf-plugins",
+        "./skills/agent-skills-vrc-ndmf-unit-tests"
+      ]
     }
   ]
 }

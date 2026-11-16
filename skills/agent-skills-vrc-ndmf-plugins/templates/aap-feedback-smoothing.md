@@ -42,10 +42,11 @@ frames is the memory. This is the one place the arithmetic kit
   wrapped in a 1D tree over `IsLocal`: one side selects the
   smoother, the other selects a passthrough (a 1D remap of the
   input straight onto the output). `IsLocal` is declared Float
-  in the generated controller — blend parameters must be Float,
-  and the framework force-promotes the avatar's Bool `IsLocal`
-  to Float during the build, rewriting its If/IfNot transitions
-  to Greater/Less 0.5, so the shapes stay consistent.
+  in the generated controller — blend parameters must be Float.
+  The platform supplies `IsLocal` as Bool; VRChat converts the
+  value at runtime for a controller that declares the parameter
+  with a different type (VRChat Avatar Platform, Parameter Type
+  Conversion), so the tree reads 0 or 1.
 
 ## Skeleton
 
@@ -58,8 +59,8 @@ Motion ExponentialSmoothing(AAPParameter input, AAPParameter output, string amou
         input.Min, ConstClip(output.Parameter, input.Min),
         input.Max, ConstClip(output.Parameter, input.Max));
     var keepSelf = New1D($"{output} := {output}", output.Parameter,
-        input.Min, ConstClip(output.Parameter, input.Min),
-        input.Max, ConstClip(output.Parameter, input.Max));
+        output.Min, ConstClip(output.Parameter, output.Min),
+        output.Max, ConstClip(output.Parameter, output.Max));
     return New1D($"ExpSmooth {output}", amountSource, 0, copyInput, 1, keepSelf);
     // Add as a layer with writeDefaultValues: false.
 }

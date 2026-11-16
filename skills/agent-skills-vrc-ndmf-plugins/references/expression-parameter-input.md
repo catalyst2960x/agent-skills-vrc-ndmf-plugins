@@ -154,9 +154,12 @@ field is set, without the author setting two fields by hand.
   the build copy.
 - A write that cannot apply is skipped and reported as NonFatal
   (P-06): the target outside the avatar, and an assignment whose
-  name is already taken by an earlier assignment of the same
-  component. For conflicting assignments of one component, the
-  first wins. A skip is never silent: the author recorded an
+  name is already taken in the build's name ledger — by an
+  earlier assignment, or by a parameter another component
+  generates. A name the assignment's own target generates is
+  the exception: writing that name is the assignment's purpose.
+  For conflicting assignments, the first in processing order
+  wins. A skip is never silent: the author recorded an
   assignment expecting it to take effect.
 - At edit time, when the name an assignment would write is
   already taken, in general the editor offers a deduplicated

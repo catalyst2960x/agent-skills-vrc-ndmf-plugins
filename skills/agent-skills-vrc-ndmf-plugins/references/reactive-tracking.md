@@ -33,7 +33,11 @@ The mechanism has four parts.
   same names. The registry is keyed by the object itself: it
   records the object, its proxy name, and its build-time default,
   and registration declares the proxy in every controller held at
-  that point. It records no path and no binding — a path captured
+  that point. Registration also records, per consumer, the
+  objects its chains are computed from — its own object, and its
+  source's object where the design has one — and the name of the
+  layer it generated, so the mirroring pass can recompute the
+  chains and find the layer (R8). It records no path and no binding — a path captured
   at registration cannot be relied on at mirroring time, for the
   reason stated under "The mirroring pass".
 - **Proxy.** One Float animator parameter per tracked object,
@@ -97,13 +101,14 @@ The mechanism holds only under these properties.
 
 | # | Property | Reason |
 |---|---|---|
-| R1 | Registration completes before the mirroring pass runs; the contract is "register by the end of Generating" | The mirroring pass processes the recorded set once; a later registration has no pass left to mirror it |
+| R1 | Registration completes before the mirroring pass runs; the contract is "register by the end of Generating" — the pass's own chain completion (R8) registers at the pass's head, before any curve is copied | The mirroring pass processes the recorded set once; a later registration has no pass left to mirror it |
 | R2 | The mirroring pass runs in Transforming, after the avatar's animation generation is complete | The pass copies curves that other passes generate; a curve generated after it is never copied |
 | R3 | The mirroring pass obtains the source binding at mirroring time, resolved from the recorded object; the registry holds no path and no binding | A captured path cannot be relied on across the span between registration and mirroring: the remapper's records are a snapshot from the context's activation, the context can reactivate within a build, and a snapshot taken after a reparenting records the moved path as the original — the captured path then exists in neither the map nor the graph. Resolving from the object at mirroring time is independent of which snapshot is in force; its cost is the liveness test on every entry |
 | R4 | One proxy per object, shared by every consumer that registers the same object | Two proxies for one object diverge as soon as one consumer's registration is missed by a clip |
 | R5 | The proxy is a Float parameter whose default is the object's build-time active state (1 active, 0 inactive) | Before any clip plays, the parameter must already read as the object's current state |
 | R6 | Only mirrored curves write the proxy; the generating plugin's own layers never animate it | A layer writing the proxy fights the mirrored curves, and layer order decides the winner |
 | R7 | Coverage is the set of clips the AnimationIndex enumerates over the VirtualControllerContext's controllers at mirroring time | The set is searched under the paths as they stand at mirroring time — the path resolved from the object, and its map translation when the map gives a different one — so a reparented object is reached under the form its clips carry. A clip whose binding names a path that is neither is not reached. Clips outside the set (for example from a generator ordered after the mirroring pass) are out of scope by construction, not by error |
+| R8 | Chain membership is determined at the head of the mirroring pass: the chains are recomputed from the hierarchy as it stands there, members not yet registered are registered at that point, and the consumer layers' chain-derived transitions are rebuilt from the recomputed chains | Registration fixes the chains from the author-side hierarchy, and a pass between Generating and mirroring can reparent a consumer or its source (a Bone Proxy, an armature merge), moving ancestors into or out of its chains. Late path resolution follows a registered object's own move; it does not change the set of objects. Recomputation at the pass's head reaches every reparent up to that point; a reparent in Optimizing is outside the mechanism |
 
 Semantics that follow from the mechanism:
 
@@ -128,6 +133,24 @@ and the context requirement per P-03, and read the context as in
 Animator Generation (Merging into the avatar, case 1). The
 requirement the constraint serves is general: the pass runs after
 every pass that generates or edits the avatar's animation clips.
+
+The pass opens by completing the chains, before any curve is
+copied (R8). For each consumer in the registration record, the
+pass recomputes the consumer's chains — its own, and its
+source's where the design has one — from the hierarchy as it
+stands, registers any member the registry does not yet hold
+through the registration route above (a name in registration
+order, declaration in every held controller, the default from
+the object's current activeSelf), and rebuilds the generated
+layer's chain-derived transitions from the recomputed chains:
+the forward transition carries every proxy of the consumer's
+own current chain, the returns are one per own-chain proxy,
+and a transition gated on the source, where the design has
+one, carries the source chain's current proxies. Transitions
+that do not derive from the chains stay as generated. A member
+that has left a chain keeps its proxy — declared, and mirrored
+like any other entry — but no longer appears in that layer's
+conditions.
 
 The pass runs once per build over the registry; an empty registry
 ends it. For each surviving entry (the registry account below),

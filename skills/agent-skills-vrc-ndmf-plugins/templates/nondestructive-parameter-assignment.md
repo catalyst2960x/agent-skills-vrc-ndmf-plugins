@@ -99,10 +99,12 @@ static bool ApplyAssignment(Component target, string name)
             if (!string.IsNullOrEmpty(receiver.parameter)) return false;
             receiver.parameter = name;
             return true;
+#if VRCSDK_3_10_3_OR_NEWER
         case VRCRaycast raycast:
             if (!string.IsNullOrEmpty(raycast.Parameter)) return false;
             raycast.Parameter = name;
             return true;
+#endif
         default:
             return false;
     }

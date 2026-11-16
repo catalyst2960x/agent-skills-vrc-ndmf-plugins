@@ -72,7 +72,7 @@ The Receiver types, the derived Advanced Parameters, and the
 per-client character of the values are platform facts in
 VRChat Avatar Platform (Contact Receivers; Synchronization).
 
-Sample code is in the draft templates (material contacts,
+Sample code is in the templates (material contacts,
 animator parameters).
 
 ## Path 2: reading VRC Material Contact buffers
@@ -90,7 +90,7 @@ values, with no change detection and no history. With zero
 targets the buffer is empty and a contact-driven effect is
 inert; the nearest Sender is index 0.
 
-Sample code is in the draft templates (material contacts,
+Sample code is in the templates (material contacts,
 shader buffers).
 
 ## Path 3: Animator → Shader
@@ -102,7 +102,7 @@ VRChat: the binding form, the shader-side requirements, and
 per-renderer instanced values are in Manipulation Techniques
 (Shader parameters).
 
-Sample code is in the draft templates (animator material
+Sample code is in the templates (animator material
 property driving).
 
 ## Path 4: the Animator controls VRC Contacts
@@ -127,7 +127,7 @@ Techniques, Objects) changes the geometry of detection itself:
   of detection. The loop's state is held by the Animator's
   parameters.
 
-Sample code is in the draft templates (animating contact
+Sample code is in the templates (animating contact
 placement).
 
 ## Three separate name bindings

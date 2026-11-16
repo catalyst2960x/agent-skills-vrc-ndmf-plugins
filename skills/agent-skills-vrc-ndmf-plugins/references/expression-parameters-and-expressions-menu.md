@@ -51,6 +51,10 @@ Facts are those of the SDK types and the pinned framework versions
   Parameters asset's value, or zero. Override Animator Defaults
   replaces the defaults inside animator controllers with the declared
   one (always applied for an Animator Only entry that has a default).
+  A localOnly entry is registered like a normal entry but with
+  network sync off: the parameter exists on every client, its value
+  stays per-client, and it costs no network bits — the setting for
+  work parameters other players never read.
 - **Renaming is scoped.** remapTo renames the parameter for everything
   outside the Parameters component's own subtree; references inside the
   subtree keep the original name. Parameters components nest, each
