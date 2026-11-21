@@ -49,7 +49,7 @@ class ApplySettingsPass : Pass<ApplySettingsPass>
 Inside the pass, in order: sanitize the found components; resolve
 their parameter types through ParameterInfo; generate; merge; then remove
 the component instances — every instance found, including ones that
-failed validation (P-21).
+failed validation (P-20).
 
 ## Phases in order
 
@@ -75,7 +75,7 @@ assembly for shared collections/utilities). Every asmdef also gets a
 
 An optional Modular Avatar integration in a case-1 plugin does not
 add the MA reference to the Editor row: its types live in a separate
-Editor assembly gated by defineConstraints (P-19).
+Editor assembly gated by defineConstraints (P-22).
 
 asmdef fields that matter:
 
@@ -149,9 +149,9 @@ Run each item through its procedure; the steps and traps live there.
 - [ ] P-08 / P-09 — controller parameters registered; layer and states
   built to the pattern
 - [ ] P-12 (case 2) — merge component added before any source removal;
-  every found instance removed, failed ones included (P-21)
+  every found instance removed, failed ones included (P-20)
 - [ ] Framework (BuildContext) — replaced objects registered with the
-  ObjectRegistry when another pass may hold the original (P-16)
+  ObjectRegistry when another pass may hold the original (P-18)
 
 ## Pointers to the references that own the facts
 
@@ -165,5 +165,5 @@ Run each item through its procedure; the steps and traps live there.
   menu limits, installer and hierarchy routes: Expression Parameters and Expressions Menu.
 - Property bindings for generated clips: Manipulation Techniques.
 - Preview — the IRenderFilter contract and the decision order: Modular
-  Avatar Integration (Preview); procedure P-18.
-- Audit and delivery: P-20 (Procedure Index).
+  Avatar Integration (Preview); procedure P-21.
+- Audit and delivery: P-24 (Procedure Index).

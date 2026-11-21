@@ -45,6 +45,12 @@ from the case catalogue (T-03).
       its own assertion, its expectations trace to the
       design, and its verdict is stable alone and in the
       suite (T-06)
+
+After the checklist, the case is complete. Where the
+requirement behind it was split (SKILL.md, Static scope),
+the runtime side is verified by the companion method
+(Runtime Verification, references); it is not a checklist
+item and does not reopen the case.
 - [ ] The full suite passes with the case included (T-10)
 
 The severity assertion idiom: after a build, the expected

@@ -1,9 +1,10 @@
 # agent-skills-vrc-ndmf-plugins
 
-A collection of agent skills for building VRChat avatar plugins on
-NDMF (Non-Destructive Modular Framework): instructions, procedures,
-and references that an AI coding assistant loads before designing
-or writing a plugin, and before writing or extending its tests.
+A collection of agent skills for VRChat avatar work: building
+plugins on NDMF (Non-Destructive Modular Framework), unit testing
+them, and creating custom shaders based on lilToon. Each skill is
+instructions, procedures, and references that an AI coding
+assistant loads before designing or writing the code.
 
 A plugin in these skills' scope is an editor-only component plus a
 build-time pass that validates against `ParameterInfo`, generates and
@@ -20,7 +21,7 @@ npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins
 Pin a release by appending its tag:
 
 ```bash
-npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.4
+npx skills add catalyst2960x/agent-skills-vrc-ndmf-plugins@v0.5
 ```
 
 As a Claude Code plugin:
@@ -54,7 +55,7 @@ parameters and menus, and package the result for VPM.
 | **Error reporting** | The severity policy: a plugin never blocks the build; Information, NonFatal, and no Error |
 | **Platform** | The VRChat avatar platform: playable layers, VRC Contacts and Material Contacts, Avatar Optimizer compatibility |
 | **Packaging** | The VPM package layout and distribution |
-| **Templates** | 24 worked samples of the mechanisms the references state as rules |
+| **Templates** | 28 worked samples of the mechanisms the references state as rules |
 
 ### agent-skills-vrc-ndmf-unit-tests
 
@@ -68,22 +69,46 @@ build reports.
 | **Case catalogue** | 70 cases in 14 categories: base verification, component processing, generated output, parameter supply, error reporting, ordering and interoperation, non-destructiveness, preview, platform variants, mesh and hierarchy, menus, editor operations, pure logic |
 | **Procedures** | T-01 to T-10: setting up, selecting and writing cases, verifying a case, regression, running the suite in Unity, triage, and close-out |
 | **Failure triage** | Reading a failing case: base first, then the pass and pipeline bisection, then product against dependency |
+| **Runtime verification** | The companion method that verifies runtime behaviour in Av3Emulator, kept separate from the EditMode suite |
 | **Templates** | 17 worked samples, one per case area, with document-local stand-ins whose contracts are stated |
+
+### agent-skills-shader-liltoon-custom
+
+Creating custom shaders based on lilToon with its official
+template system: `.lilcontainer` generation, `.lilblock`
+properties, insertion macros and vertex/fragment hooks, a custom
+inspector derived from `lilToonInspector`, and VPM distribution.
+
+| Area | Content |
+|------|---------|
+| **Template system** | Setup from Template.zip, the `.lilcontainer` generation model and datas tags, the full rename set, trimming the variant set |
+| **Properties** | Properties in the lilblock, the lil property attributes, the HLSL counterparts for custom uniforms and textures |
+| **Hooks** | Vertex input requests and interpolators, BEFORE_/OVERRIDE_ hooks at 35 points, pass-specific code |
+| **Custom inspector** | An inspector derived from lilToonInspector, shader replacement, shared styles and helpers |
+| **lilToon's surface** | Stock uniforms, samplers and helper functions available to custom code, LIL_FEATURE_* gating |
+| **Platform support** | What lilToon cannot do on Quest, Android and mobile, with the workarounds |
+| **Distribution** | VPM packaging, the lilToon dependency range, the license duty for template-derived files |
+| **Procedures** | P-01 to P-12: verifying the target version's surface, generating, writing hooks and properties, the compile check, and distribution |
 
 ## Scope
 
-- Unity 2022 LTS, VRChat Avatars SDK (SDK3A), editor-only plugins.
-- Facts are anchored to NDMF 1.15.* and Modular Avatar 1.19.*.
-- Exactly two dependency cases are covered: (1) NDMF only, and
-  (2) NDMF + Modular Avatar.
-- Out of scope: VRChat worlds and Udon, and shader work.
+- Unity 2022 LTS, VRChat Avatars SDK (SDK3A), editor-only plugins
+  and lilToon-based custom shaders.
+- Facts are anchored to NDMF 1.15.* and Modular Avatar 1.19.* for
+  the plugin skills, and to lilToon 2.4.* for the shader skill.
+- Exactly two dependency cases are covered for plugins: (1) NDMF
+  only, and (2) NDMF + Modular Avatar.
+- Out of scope: VRChat worlds and Udon, and shaders other than
+  lilToon-based custom shaders.
 
 ## Use
 
 Load `skills/agent-skills-vrc-ndmf-plugins/SKILL.md` into the coding
 agent before it designs or writes an NDMF plugin; the file directs
 the agent to the reference each task needs. Load the unit-tests
-skill before writing or extending a plugin's tests. The layout follows the
+skill before writing or extending a plugin's tests, and the
+lilToon skill before creating or modifying a lilToon-based custom
+shader. The layout follows the
 agent-skills form used by
 [agent-skills-vrc-udon](https://github.com/niaka3dayo/agent-skills-vrc-udon).
 
@@ -91,6 +116,6 @@ agent-skills form used by
 
 MIT License. See `LICENSE`.
 
-The skill's knowledge draws on existing open-source work in the VRChat
-avatar tooling ecosystem. No code from them is reproduced in this
-skill.
+The skills' knowledge draws on existing open-source work in the VRChat
+avatar tooling ecosystem. No code from them is reproduced in these
+skills.

@@ -55,6 +55,20 @@ Facts are those of the SDK types and the pinned framework versions
   network sync off: the parameter exists on every client, its value
   stays per-client, and it costs no network bits — the setting for
   work parameters other players never read.
+- **Entry settings bind only where the entry creates the
+  parameter.** A ParameterConfig's saved and synced settings take
+  effect when the named parameter does not exist and is generated
+  from the entry. A parameter a component supplies — a PhysBone's
+  family, configured through a Prefix entry — is registered by its
+  supplier, and there is no author-facing saved or synced setting
+  for it.
+- **A parameter generated for a menu item follows the assigner.**
+  Where a menu item references a parameter no component declares,
+  the parameter assigner registers it as an Expression Parameter.
+  Its network sync follows localOnly (networkSynced = !localOnly);
+  a not-synced form cannot be held for it. The assigner infers
+  its type from the item: a Choose with two options generates a
+  Bool, a Choose with three an Int.
 - **Renaming is scoped.** remapTo renames the parameter for everything
   outside the Parameters component's own subtree; references inside the
   subtree keep the original name. Parameters components nest, each
@@ -145,7 +159,7 @@ Two routes, both consumed by MA at build time:
   sequentially in hierarchy order — the standard way to build a group
   of toggles over one Int parameter. A generator that relies on
   automatic creation must set these flags deliberately; declaring the
-  parameter explicitly (P-13) is the controlled route.
+  parameter explicitly (P-14) is the controlled route.
 - Puppet controls bind their axes through the control's sub-parameters,
   not its main parameter. A radial-driven effect often needs a companion
   parameter marking "the value is being changed" so other states can

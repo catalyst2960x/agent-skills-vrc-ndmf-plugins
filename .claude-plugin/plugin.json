@@ -1,10 +1,1 @@
-{
-  "name": "agent-skills-vrc-ndmf-plugins",
-  "version": "0.4.0",
-  "description": "VRChat avatar plugin development with NDMF (Non-Destructive Modular Framework) and Modular Avatar (MA): build-time passes that generate animator controllers, parameters and menus, integrate Avatar Optimizer (AAO), and package for VPM. Covers NDMF-only and NDMF + MA projects.",
-  "author": {
-    "name": "ArialNova"
-  },
-  "repository": "https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins",
-  "license": "MIT"
-}
+{"author":{"name":"ArialNova"},"description":"VRChat avatar development skills: NDMF plugin development and unit testing, and creating custom shaders based on lilToon with its official template system.","license":"MIT","name":"agent-skills-vrc-ndmf-plugins","repository":"https://github.com/catalyst2960x/agent-skills-vrc-ndmf-plugins","version":"0.5.0"}

@@ -33,13 +33,21 @@ almost nothing.
   so assigning defaultWeight on the retrieved value changes nothing
   in the controller — assign the modified layer back into the
   array. A consumer that merges controllers normalizes the first
-  layer's weight to 1, which masks the omission in a one-layer
+  layer of each merged controller to weight 1 — a controller's
+  first layer always has weight 1 regardless of what is
+  serialized — which masks the omission in a one-layer
   controller; a controller with several layers is where it
   surfaces. Names within one
   generated controller are distinct: when two components would yield
   the same name, the generator makes them distinct by its own
   deterministic rule, assigned in collection order so repeated
   builds produce the same names.
+- Generated objects follow the same rule under a shared parent:
+  animation paths address an object by its name, so two components
+  on one GameObject that generate a holder under the same name
+  collide in the built avatar's paths. Generated child names are
+  made distinct by the same deterministic rule, assigned in
+  collection order.
 - Generated clips are named by their role within their container.
   The layer and state structure already identifies the feature and
   the object, so the clip's name carries the role: a toggle's two
@@ -68,6 +76,12 @@ almost nothing.
   real work.
 - The behaviour instance goes on `active` only, and carries both the enter
   and the exit settings; there is no second behaviour for exit.
+- A state whose motion time is a parameter (timeParameterActive)
+  is evaluated at the parameter's value, and its time clamps at
+  0: a key placed at a negative time does not shape the interval
+  above 0 as placed. A scrub whose range starts below 0 places
+  its start key at time 0, holding the start value, rather than
+  at the negative time.
 
 ## Complete clips and default capture
 
@@ -226,6 +240,11 @@ selectors, and graded values: one layer replaces the
 one-layer-per-component state machines, and there are no transitions
 at all.
 
+A blend tree's blend parameter is a Float parameter. A
+proportional drive from an Int parameter is therefore not a
+blend tree: it is built as one state per value, each entered
+on that value's equality.
+
 Build the layer in this order:
 
 1. Register the driver parameter on the controller: a Float with
@@ -373,6 +392,42 @@ root.children = children;
 - SDK behaviour field and enum names must be verified against code that
   compiles against the SDK (NEVER #8 in SKILL.md).
 
+## Attaching SDK state behaviours
+
+- Attach a behaviour by adding the SDK type to the state
+  (AnimatorState.AddStateMachineBehaviour) or with
+  ScriptableObject.CreateInstance, and set its fields on the
+  attached instance. A StateMachineBehaviour is a ScriptableObject:
+  an instance created with `new` is not engine-managed and does not
+  survive into the built avatar. The catalogue of behaviours and
+  their platform semantics live in VRChat Avatar Platform (State
+  Behaviour Semantics).
+- A generator sets every field it relies on: defaults differ
+  depending on how the behaviour instance was created, and an unset
+  field (an apply mode, for example) silently changes the outcome.
+- One Parameter Driver per state collects all of that state's
+  parameter changes; do not stack duplicates. Its sync behaviour is
+  part of the design, not a detail: changes can be restricted to the
+  local player, and random changes can be marked unsynced.
+- Multiple Play Audio instances may coexist on one state, one per
+  AudioSource. For Tracking Control, set per element; unset elements
+  keep the SDK default.
+- A behaviour that addresses a layer by index (Animator Layer
+  Control) is written with the index the layer has in the generated
+  controller. AnimatorServices rewrites the index when the
+  behaviour is copied, and again when the merged controller is
+  committed, so the built controller carries the physical index;
+  when the addressed layer does not survive into the built
+  controller, the behaviour is dropped rather than left pointing
+  at another layer. This holds while the behaviour's playable is
+  the playable the generated controller belongs to and generation
+  runs inside the AnimatorServices context.
+- VRChat's built-in animator parameters are ordinary parameter names
+  from the generator's point of view: treat the names as constants
+  defined in one place in the product, verified against the SDK
+  documentation. Their validation and registration differ from
+  declared parameters (Built-in parameters in generated output).
+
 ## Merging into the avatar
 
 The route depends on the dependency case (SKILL.md, Design
@@ -405,7 +460,7 @@ Decisions).
   there.
 - Remove the source components only after the merge component exists,
   and remove every found instance, including ones whose generation
-  failed (P-21).
+  failed (P-20).
 
 ### Case 1: edit the avatar's controllers through virtual controllers
 
@@ -481,32 +536,6 @@ clones the avatar's controller, edits the clone, and assigns the
 clone to the descriptor's layer; the shared asset is never mutated.
 That route is the fallback for edits the virtual objects do not
 expose.
-
-## Attaching SDK state behaviours
-
-- Attach a behaviour by adding the SDK type to the state
-  (AnimatorState.AddStateMachineBehaviour) or with
-  ScriptableObject.CreateInstance, and set its fields on the
-  attached instance. A StateMachineBehaviour is a ScriptableObject:
-  an instance created with `new` is not engine-managed and does not
-  survive into the built avatar. The catalogue of behaviours and
-  their platform semantics live in VRChat Avatar Platform (State
-  Behaviour Semantics).
-- A generator sets every field it relies on: defaults differ
-  depending on how the behaviour instance was created, and an unset
-  field (an apply mode, for example) silently changes the outcome.
-- One Parameter Driver per state collects all of that state's
-  parameter changes; do not stack duplicates. Its sync behaviour is
-  part of the design, not a detail: changes can be restricted to the
-  local player, and random changes can be marked unsynced.
-- Multiple Play Audio instances may coexist on one state, one per
-  AudioSource. For Tracking Control, set per element; unset elements
-  keep the SDK default.
-- VRChat's built-in animator parameters are ordinary parameter names
-  from the generator's point of view: treat the names as constants
-  defined in one place in the product, verified against the SDK
-  documentation. Their validation and registration differ from
-  declared parameters (Built-in parameters in generated output).
 
 ## Output routes, including the destructive one
 

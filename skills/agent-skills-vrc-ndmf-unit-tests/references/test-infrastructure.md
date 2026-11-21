@@ -49,6 +49,13 @@ same builder with the platform named. A case that needs a
 realistic avatar shape loads a prefab fixture instead; common
 fixtures live in one folder next to the tests.
 
+An asset a fixture's state behaviour references — an audio
+clip, for example — is created as a persisted asset in the
+suite's temp asset folder, not as an in-memory object: the
+build copies an in-memory object, so the built behaviour
+references a different instance, while a persisted asset
+reaches the built avatar as the same instance.
+
 ## The two build entries
 
 A direct BuildContext over a clone of the avatar runs one
@@ -163,7 +170,20 @@ the material on the built avatar is a distinct instance
 carrying the same values, and a reference-equality
 assertion fails on a correct build. The fixture
 differentiates materials by a value property — a colour —
-and the assertion reads that property.
+and the assertion reads that property. A value a clip
+drives on a material is read from the renderer's property
+block: material curves are applied through the block, not
+written into the material object.
+
+Identity across the build is asserted by instance ID, not by
+reference. An object the build does not copy — a surviving
+state behaviour, for example — is the same native object on
+the built side but can arrive as a different managed wrapper,
+so NUnit's AreSame fails on a correct build. The assertion
+compares GetInstanceID values, with which Unity's own
+equality agrees:
+Assert.AreEqual(expected.GetInstanceID(),
+actual.GetInstanceID()).
 
 ## Running the tests
 

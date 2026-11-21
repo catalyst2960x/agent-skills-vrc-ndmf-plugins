@@ -1,0 +1,5 @@
+name: agent-skills-shader-liltoon-custom
+title: lilToon Custom Shaders
+description: "Creating custom shaders based on lilToon with its official template system: .lilcontainer generation, .lilblock properties and shader data, HLSL insertion macros for uniforms, vertex inputs and interpolators, vertex and fragment hooks (BEFORE_/OVERRIDE_), pass-specific code, variant trimming, a custom inspector derived from lilToonInspector, and VPM distribution. Covers lilToon 2.4.* on Unity 2022 LTS."
+category: Creation
+include_in_prompt: false

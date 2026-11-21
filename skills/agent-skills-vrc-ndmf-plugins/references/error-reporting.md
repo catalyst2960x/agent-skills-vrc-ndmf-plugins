@@ -34,6 +34,14 @@ The parameter set validation reads is specified in Parameters.
   might have applied to.
 - Sanitize before validating (P-04): validation, generation and name
   collection all read the sanitized arrays, never the raw ones.
+- An enum value outside its declared range — reachable through
+  serialized data the inspector never produced — is a set-but-invalid
+  value and is reported NonFatal. The handling takes one of two
+  forms. Where the value selects a mode of the component's own
+  processing, sanitize it to the field's declared default and
+  continue. Where the value decides what is generated, do not
+  substitute a default: skip the item, because generating a
+  different item than the one configured would hide the defect.
 
 ## Reporting with ErrorReport
 

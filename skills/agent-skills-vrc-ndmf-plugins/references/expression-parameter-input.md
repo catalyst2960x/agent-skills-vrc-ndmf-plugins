@@ -48,8 +48,12 @@ Build the list in this order:
    the avatar root.
 2. Expand every entry through `SubParameters()`, so a derived
    name appears as its own entry.
-3. Exclude entries whose `EffectiveName` is empty, and exclude
-   hidden entries.
+3. Exclude entries whose `EffectiveName` is null or empty, at
+   every stage — the provided parameters and the expanded
+   derived names alike — and exclude hidden entries. Broken
+   avatar assets exist whose Expression Parameters hold a
+   parameter with an empty name; an empty candidate, once
+   offered, propagates into the field that takes it.
 4. Exclude animator-only entries when the name must denote a
    parameter defined in Expression Parameters: an animator-only
    parameter is not registered there. Other fields in general
@@ -80,7 +84,7 @@ Presentation:
   from a failure; the note separates the two.
 - The plugin never pre-checks a chosen name against existing
   definitions. A name declared elsewhere with a different type
-  conflicts through the normal merge rules (P-13).
+  conflicts through the normal merge rules (P-14).
 
 ## A supplied default name
 
@@ -133,6 +137,12 @@ for a referencing field, such as a condition.
   SDK version, references to it are guarded, for example by an
   assembly version define, so the editor still compiles
   against an older SDK.
+- A parameter a plugin's own component will generate at build
+  time from its fields — a name the component defines — is not
+  in the introspection enumeration: ParameterInfo sees the
+  scene's components, not a definition held in a field. A
+  picker that offers such names derives its candidates from
+  the defining component's own data, as a group of its own.
 
 ## Assignments into another component's field
 

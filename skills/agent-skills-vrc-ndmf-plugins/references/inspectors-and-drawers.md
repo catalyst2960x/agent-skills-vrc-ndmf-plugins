@@ -57,7 +57,10 @@ form.
 ### Lists
 
 - A list of entries is a ReorderableList, drawn and edited
-  through serialized properties.
+  through serialized properties. ReorderableList lives in
+  UnityEditorInternal; in a file that imports it,
+  AnimatorControllerParameterType is written fully qualified
+  (Anti-Patterns 18).
 - In general a list accepts drops of the objects it holds.
   Draw the list with an explicit rect and use that rect as the
   drop area; while a drag carries at least one acceptable
@@ -65,10 +68,12 @@ form.
   are appended at the end through the serialized property, so
   several objects dropped together register in one operation.
   Dragged objects of other types are ignored.
-- An added element starts from the array's copy behaviour, so
-  the fields an entry needs are set explicitly on append. What
-  else appending does — the defaults it sets, whether an object
-  already in the list is appended again — is the product's
+- An element added through a SerializedProperty arrives
+  uninitialized — the element class's field initializers do
+  not run for it — so the fields an entry needs are set
+  explicitly on append, from the product's declared defaults.
+  What else appending does — whether an object already in the
+  list is appended again, and the like — is the product's
   rule, stated where the list is defined.
 
 ### Groups and foldouts
@@ -114,6 +119,12 @@ form.
   first takes a passive control ID hashed from the property
   path; without it, a pending edit can land on the element
   the selection moved to.
+- A tool that enumerates a component's members by walking its
+  SerializedObject walks with a single iterator: a copied
+  iterator (Copy()) logs an invalid-iteration error. The walk
+  does not surface the component's enabled flag (m_Enabled);
+  a tool that offers it presents it through FindProperty
+  explicitly.
 
 ### Suggestions and conflicts
 

@@ -4,7 +4,7 @@ How to find where a build goes wrong. NDMF's and Modular Avatar's
 documentation name the tools below but give no triage procedure;
 this file is the procedure-shaped summary; tool facts are those of
 the pinned NDMF version (SKILL.md, Sources). Diagnosis happens in the reader's Unity Editor;
-anything that needs it stays unconfirmed until run there (P-20).
+anything that needs it stays unconfirmed until run there (P-24).
 
 ## Inspect a finished manual build
 

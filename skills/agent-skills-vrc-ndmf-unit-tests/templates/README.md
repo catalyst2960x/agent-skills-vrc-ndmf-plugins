@@ -4,8 +4,7 @@ Worked sample code for mechanisms the references state as
 rules. Each file is self-contained: the situation it applies
 to, then the code, tagged with where the code runs. The code
 was written for these samples from the mechanism descriptions,
-trimmed to the mechanism; it is not compiled or verified in
-Unity in this form.
+trimmed to the mechanism.
 
 The case files are organized one per feature area, in the
 manner of Modular Avatar's own test suite. Cases whose

@@ -38,6 +38,7 @@ extending a plugin's tests.
 | [Procedure Index](references/procedure-index.md) | The procedures T-01 to T-10: setting up, selecting and writing cases, verifying a case, regression, running the suite in Unity, triage, and close-out | `references/procedure-index.md` |
 | [Anti-Patterns](references/anti-patterns.md) | Test-code patterns that pass while the product is wrong, or fail while it is right | `references/anti-patterns.md` |
 | [Diagnosing a Failing Case](references/failure-triage.md) | The triage order for a failing case: base, isolation, the pass/pipeline bisection, the report, product against dependency | `references/failure-triage.md` |
+| [Runtime Verification](references/runtime-verification.md) | A companion method for the runtime side the static scope splits off: driving a built avatar in Av3Emulator and reading per-layer playables, and restructuring by Bone Proxy. Not a case form | `references/runtime-verification.md` |
 | [Cheatsheet](CHEATSHEET.md) | The test base surface and the case category map | `CHEATSHEET.md` |
 | [Templates](templates/README.md) | Worked sample code for mechanisms the references state as rules | `templates/` |
 
@@ -60,7 +61,10 @@ extending a plugin's tests.
   reports, and the built hierarchy. What runtime state the
   client reaches is not a test result. A requirement that
   cannot be restated statically is split: its static part
-  becomes a case, its runtime part stays manual.
+  becomes a case, its runtime part stays manual. The runtime
+  part is verified by the companion method in Runtime
+  Verification; it is not a case and does not enter the
+  suite's completion condition.
 - **Two layers of test.** A pass-unit case runs one pass in a
   direct BuildContext and isolates a rule. An integration case
   runs the full pipeline and sees ordering and other systems'

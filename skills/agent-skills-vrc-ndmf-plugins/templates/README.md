@@ -6,11 +6,7 @@ code, tagged at the top of each block with where the code runs (a
 runtime component, an Editor pass or generator, an inspector, a
 shader). The code was written for these samples from the
 mechanism descriptions and the implementations they record,
-trimmed to the mechanism; it is not compiled or verified in
-Unity in this form. Where a mechanism has been verified in
-Unity — in an adapted form, or in a product that uses it —
-the verification covers the mechanism, not the printed
-sample.
+trimmed to the mechanism.
 
 | File | Content |
 | --- | --- |
@@ -27,10 +23,14 @@ sample.
 | [menu-installation-decomposition.md](menu-installation-decomposition.md) | Installing a generated menu by decomposition: a Menu Item, a submenu over child Menu Items, or a Menu Group, by the menu's shape, with the installer that makes Modular Avatar visit them. |
 | [display-only-slider.md](display-only-slider.md) | A Radial Puppet wheel used as a parameter meter: the displayed name declared as a local-only expression parameter, a continuous writer (the deriving platform component, or a copy layer) that makes menu writes not persist, and the installer that gets the item installed. |
 | [choose-any-state-options.md](choose-any-state-options.md) | A Choose layer with one constant clip per option and AnyState equality transitions that never transition to self. |
+| [dependency-gated-asmdef-dormancy.md](dependency-gated-asmdef-dormancy.md) | An Editor assembly that references a required dependency package directly is gated by a versionDefines symbol listed in its own defineConstraints, so the product imports inert while the package is absent; the Runtime assembly stays ungated, so placed components remain as data. |
 | [deterministic-layer-names.md](deterministic-layer-names.md) | Disambiguating generated layer names in collection order (`Name`, `Name (2)`, …) so repeated builds produce the same controller. |
 | [expression-parameter-guarantee.md](expression-parameter-guarantee.md) | Guaranteeing an Expression Parameters definition by issuing Modular Avatar Parameters on the avatar root. |
 | [generated-parameter-entries.md](generated-parameter-entries.md) | Expanding a component's base name into its generated parameters, including the VRCRaycast prefix (`_Hit` / `_Ratio` / `_Distance`). |
+| [gesture-layer-generation.md](gesture-layer-generation.md) | A Gesture layer per hand whose states are selected by the built-in gesture parameters, with the hand's Weight as each state's motion time and a Fist ramp composed from two poses. |
+| [gesture-layer-generation-extensions.md](gesture-layer-generation-extensions.md) | Parameter-selected motion variants, a force mode that takes the fingers over from tracking, a hand lock, and independently assigned ramp ends for the generated Gesture layers. |
 | [isanimatorenabled-return-transition.md](isanimatorenabled-return-transition.md) | A settle transition on `IsAnimatorEnabled` IfNot so a layer returns to idle on the last frame before the animator is disabled. |
+| [layer-weight-gate.md](layer-weight-gate.md) | Gating a proportionally driven layer by its weight, set by layer controls on every state of a layer that evaluates the conditions. |
 | [layer-weight-writeback.md](layer-weight-writeback.md) | Setting a generated layer's weight by writing the layers array back into the controller. |
 | [nondestructive-parameter-assignment.md](nondestructive-parameter-assignment.md) | Recording a parameter name for another component as data, applied by a Resolving pass to the build copy only, into a field that is still empty. |
 | [object-keyed-tracking-registry.md](object-keyed-tracking-registry.md) | Tracking a GameObject's active state through a proxy parameter: an object-keyed registry, and a late pass that resolves paths from the objects at copy time. |

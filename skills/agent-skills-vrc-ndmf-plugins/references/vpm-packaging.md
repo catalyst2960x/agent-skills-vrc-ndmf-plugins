@@ -2,27 +2,36 @@
 
 What a plugin package must satisfy to be installed and managed as a
 VRChat Package Manager (VPM) package through the VRChat Creator
-Companion (VCC). Facts are those of the VCC documentation;
-URLs per section. VPM behaviour changes with VCC releases, so
-re-verify against the same pages before relying on a field's exact
-semantics.
+Companion (VCC). Facts are those of the VCC documentation and the
+Unity Manual; URLs per section. VPM behaviour changes with VCC
+releases, so re-verify against the same pages before relying on a
+field's exact semantics.
 
 Contents:
 
 - Package format and placement
 - Manifest: required and recommended fields
+- Project templates are not packages
 - Dependencies and version ranges
 - Migrating from an Assets-based distribution
 - Testing before publishing: user packages
-- Project templates are not packages
 
 ## Package format and placement
 
 - The VPM format is the Unity Package Manager format with additions.
-  A package is a folder containing a `package.json` manifest.
+  A package is a folder containing a `package.json` manifest, and
+  the folder carries the package's technical name: the `name` in
+  the manifest, in reverse domain notation.
 - The VCC installs packages into the project's `Packages` folder and
   manages them from the Manage Project screen: select a version in
   the dropdown, or use the + icon to install the newest version.
+- An installed package sits under the package manager's control: a
+  package installed from a registry is immutable, and the VCC
+  replaces a package's contents when its version changes. A plugin
+  never writes generated files into its own package folder. Files
+  a plugin generates into a project belong to the project: write
+  them under a single root folder in `Assets` that the plugin
+  owns, and confine the plugin's writes and cleanup to that root.
 - A project must be in VPM format before its packages can be managed;
   legacy SDK3 projects are migrated by the VCC first.
 - Package sources: official packages, curated packages, community
@@ -30,6 +39,8 @@ Contents:
 
 Source: https://vcc.docs.vrchat.com/vpm/
 Source: https://vcc.docs.vrchat.com/vpm/packages
+Source: https://docs.unity3d.com/Components/cus-naming.html
+Source: https://docs.unity3d.com/2021.3/Documentation/Manual/upm-embed.html
 
 ## Manifest: required and recommended fields
 
@@ -54,6 +65,14 @@ Required fields in `package.json`:
   used for cache invalidation.
 
 Source: https://vcc.docs.vrchat.com/vpm/packages
+
+## Project templates are not packages
+
+- VCC templates create new projects; their manifest is a different
+  format whose only required fields are `name` and `displayName`.
+  Do not model a package's `package.json` on the template example.
+
+Source: https://vcc.docs.vrchat.com/vpm/templates
 
 ## Dependencies and version ranges
 
@@ -110,14 +129,6 @@ Source: https://vcc.docs.vrchat.com/vpm/packages
   the user-package route.
 
 Source: https://vcc.docs.vrchat.com/vpm/packages
-
-## Project templates are not packages
-
-- VCC templates create new projects; their manifest is a different
-  format whose only required fields are `name` and `displayName`.
-  Do not model a package's `package.json` on the template example.
-
-Source: https://vcc.docs.vrchat.com/vpm/templates
 
 ## See Also
 

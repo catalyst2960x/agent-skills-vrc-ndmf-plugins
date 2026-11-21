@@ -34,7 +34,7 @@ exist, and they compose per property, not per product:
 
 Static manipulation is the third option for changes that do not need a
 parameter. It has two shapes: the plugin's own directive component,
-whose settings its pass applies to the build-time clone (P-17) — the
+whose settings its pass applies to the build-time clone (P-19) — the
 pass edits the clone directly (activate, reparent, delete, replace
 materials, edit assets) — and, in dependency case 2, an existing
 Modular Avatar directive component the plugin emits and configures
@@ -68,7 +68,7 @@ asset.
 
 ## Converting shared assets in a pass
 
-P-16 in the Procedure Index runs this section, with Direct editing
+P-18 in the Procedure Index runs this section, with Direct editing
 and the framework surface above, as a procedure.
 
 The recurring shape of a conversion pass (a material swap is the
@@ -80,7 +80,7 @@ common case):
   original always maps to the same clone. Then clone, change the
   clone, and rewrite every reference through that one mapping;
   register each replacement with the ObjectRegistry when another
-  pass may already hold the original (P-16).
+  pass may already hold the original (P-18).
   Rewriting only the live values leaves the animated overrides
   pointing at the original, and the avatar snaps back the first time
   such an animation plays.
@@ -141,7 +141,10 @@ material, never through the material asset itself:
 
 The shader side has its own requirements. The property must be
 declared in the shader's Properties: a name with no declaration
-cannot be bound. A `[HideInInspector]` property can be driven —
+cannot be bound. A tool that enumerates a shader's properties
+(ShaderUtil) works from the ShaderPropertyType set — Color,
+Vector, Float, Range, TexEnv, Int: the texture member is
+TexEnv, and an integer property is Int. A `[HideInInspector]` property can be driven —
 visibility and driving are unrelated — and the general form hides
 properties that only tools and clips touch. When a property is not
 driven, its value is the one stored in the material (or the
@@ -151,6 +154,14 @@ driven through the components of `material.<texture name>_ST`:
 texture itself is an object-reference curve on `material.<name>`,
 not float curves: it replaces the reference rather than
 interpolating a value.
+
+A driven value is not written into the material object: it is
+applied through the renderer's property block, so a readback of
+a driven value reads the renderer's property block
+(GetPropertyBlock), never the material. Sampling a clip in Edit
+mode (AnimationClip.SampleAnimation) does not apply material
+curves, so it cannot be used to tell whether a material binding
+is present.
 
 The binding is per renderer, but a plain property's value is per
 material: two renderers sharing the material show the same value.

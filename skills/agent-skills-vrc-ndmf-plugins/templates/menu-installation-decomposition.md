@@ -17,6 +17,11 @@ that makes Modular Avatar visit them.
   ModularAvatarMenuInstaller: with no installer anywhere on the
   avatar, menu components are not visited at all. Every route
   therefore ends with an installer on the target GameObject.
+- An installer by itself installs nothing: an installer with no
+  menu to append and no menu source on its GameObject is skipped
+  at registration. Collection under a node reaches the node's
+  direct children only, so what an installer is to visit sits on
+  its own GameObject or among its direct children.
 - If the GameObject has a ModularAvatarMenuInstaller, the
   generated VRCExpressionsMenu asset — or its parent menu, for a
   menu that has one — is assigned as the installer's menu to

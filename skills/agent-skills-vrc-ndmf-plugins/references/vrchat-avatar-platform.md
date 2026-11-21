@@ -49,8 +49,8 @@ output).
 | PreviewMode | Int | 1 while the avatar is being previewed |
 | Viseme | Int | Oculus viseme index 0–14 (0 = sil); with jaw systems, 0–100 volume |
 | Voice | Float | Microphone volume 0.0–1.0 |
-| GestureLeft / GestureRight | Int | 0 Neutral, 1 Fist, 2 HandOpen, 3 FingerPoint, 4 Victory, 5 RockNRoll, 6 HandGun, 7 ThumbsUp |
-| GestureLeftWeight / GestureRightWeight | Float | Analog trigger 0.0–1.0 |
+| GestureLeft / GestureRight | Int | 0 Neutral, 1 Fist, 2 HandOpen, 3 FingerPoint, 4 Victory, 5 RockNRoll, 6 HandGun, 7 ThumbsUp. IK synchronization, updated about every 0.1 s |
+| GestureLeftWeight / GestureRightWeight | Float | Analog value 0.0–1.0, live only while the matching Gesture is Fist (1); in any other gesture the value reads 0. Playable synchronization, updated every 0.1–1 s |
 | AngularY | Float | Angular velocity on Y |
 | VelocityX / VelocityY / VelocityZ | Float | Move speed per axis, m/s |
 | VelocityMagnitude | Float | Total move speed |
@@ -443,6 +443,10 @@ Material Contact (Path 2).
   total bit count, not their names. Modular Avatar merges
   declarations in hierarchy order, so placement order is part of
   sync compatibility.
+- Synced custom parameters are interpolated on remote clients
+  between updates. The interpolation covers custom parameters
+  only; the built-in parameters follow their own synchronization,
+  as the catalogue notes for the Gesture parameters.
 - PhysBone grab and pose state is matched between clients by Network
   IDs assigned in hierarchy order; avatar variants whose PhysBones
   appear in a different order misalign that state.

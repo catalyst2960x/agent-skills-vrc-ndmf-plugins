@@ -38,7 +38,9 @@ gained ancestor's proxy is among its conditions in the
 first form, and the lost ancestor's proxy is absent in the
 mirror form. Toggling the gate at runtime is outside the
 static scope; the case asserts the condition sets the
-built hierarchy implies.
+built hierarchy implies. The runtime form of the same
+fixture — driving the moved component in Av3Emulator — is
+in Runtime Verification (references).
 
 ## Skeleton
 
